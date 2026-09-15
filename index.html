@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#0D1015]">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARCHAEOMap — Digital Archaeological Field Survey & Spatial Analysis System</title>
+  <meta name="description" content="GIS-Based Digital Archaeological Field Survey & Spatial Analysis System. Mapping the past. Understanding the patterns.">
+
+  <!-- Tailwind CSS CDN with custom Archaeological theme configuration -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            charcoal: {
+              900: '#0D1015',
+              850: '#11151C',
+              800: '#141820',
+              750: '#181E28',
+              700: '#1C222D',
+              600: '#262E3D',
+              500: '#384254'
+            },
+            sandstone: {
+              50: '#FAF8F5',
+              100: '#F4EFE6',
+              200: '#EAE1D2',
+              300: '#D9CAB3',
+              400: '#BDB09B',
+              500: '#8C7B6C'
+            },
+            terracotta: {
+              DEFAULT: '#C85A32',
+              hover: '#D96A43',
+              light: '#E87D56',
+              dark: '#A64522'
+            },
+            gold: {
+              DEFAULT: '#C6A664',
+              hover: '#D8B775',
+              light: '#EAD198',
+              dark: '#A38443'
+            }
+          },
+          fontFamily: {
+            serif: ['Cinzel', 'serif'],
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Font Awesome 6 Pro Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Leaflet.heat plugin -->
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+  <!-- Chart.js 4.4 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Custom Archaeological Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body class="h-full text-stone-200 antialiased flex flex-col bg-carto-grid selection:bg-terracotta selection:text-white">
+
+  <!-- ================================================================
+       TOP MOBILE HEADER / BREADCRUMB BAR
+       ================================================================ -->
+  <header class="lg:hidden flex items-center justify-between px-4 py-3 bg-charcoal-800 border-b border-stone-800 sticky top-0 z-40">
+    <div class="flex items-center gap-3">
+      <button id="mobile-menu-toggle" class="p-2 rounded-lg bg-charcoal-700 text-stone-300 hover:text-white">
+        <i class="fas fa-bars text-base"></i>
+      </button>
+      <div class="flex items-center gap-2">
+        <span class="text-xl">🏺</span>
+        <div>
+          <h1 class="font-serif text-sm font-bold tracking-wider text-sandstone-100 leading-tight">ARCHAEOMAP</h1>
+          <p class="text-[9px] text-stone-400 tracking-wider uppercase font-mono">GIS Archaeological System</p>
+        </div>
+      </div>
+    </div>
+    <button onclick="app.navigateTo('add-artifact')" class="px-3 py-1.5 rounded-lg bg-terracotta text-white text-xs font-medium shadow">
+      <i class="fas fa-plus mr-1"></i> Record
+    </button>
+  </header>
+
+  <!-- Application Shell (Sidebar + Main Content Area) -->
+  <div class="flex-1 flex overflow-hidden">
+
+    <!-- Mobile Sidebar Backdrop -->
+    <div id="sidebar-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden lg:hidden"></div>
+
+    <!-- ================================================================
+         MAIN SIDEBAR NAVIGATION
+         ================================================================ -->
+    <aside id="main-sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-charcoal-850 border-r border-stone-800/80 flex flex-col justify-between transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300 ease-in-out shadow-2xl">
+      
+      <!-- Top Brand Section -->
+      <div class="p-6 border-b border-stone-800/60">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-terracotta to-terracotta-dark flex items-center justify-center text-xl shadow-lg border border-terracotta/40">
+              🏺
+            </div>
+            <div>
+              <h1 class="font-serif text-lg font-black tracking-widest text-sandstone-100 flex items-center gap-1.5">
+                <span>ARCHAEO</span><span class="text-terracotta">MAP</span>
+              </h1>
+              <p class="text-[10px] text-gold tracking-wider uppercase font-mono">Digital Field Survey & GIS</p>
+            </div>
+          </div>
+          <button id="mobile-menu-close" class="lg:hidden text-stone-400 hover:text-white p-1">
+            <i class="fas fa-times text-lg"></i>
+          </button>
+        </div>
+
+        <!-- Tagline -->
+        <p class="text-[11px] text-stone-400 italic mt-3 pt-3 border-t border-stone-800/60 leading-tight">
+          “Mapping the past. Understanding the patterns.”
+        </p>
+
+        <!-- Current Survey Project Badge -->
+        <div class="mt-3 p-2.5 rounded-xl bg-charcoal-800/90 border border-stone-700/50 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <div class="text-[11px]">
+              <span class="text-stone-400 block text-[9px] uppercase font-mono">Survey Sector</span>
+              <span class="text-sandstone-200 font-medium">Sisupalgarh Basin</span>
+            </div>
+          </div>
+          <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-charcoal-700 text-gold border border-stone-700">WGS84</span>
+        </div>
+      </div>
+
+      <!-- Navigation Menu Links (8 Core Sections) -->
+      <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <div class="px-3 py-1.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-stone-400">
+          Navigation Modules
+        </div>
+
+        <!-- 1. Dashboard -->
+        <a href="#dashboard" data-nav-target="dashboard" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-stone-300 hover:bg-charcoal-750 hover:text-sandstone-100 transition-all group">
+          <i class="fas fa-compass w-4 text-stone-400 group-hover:text-terracotta text-sm"></i>
+          <span>Dashboard</span>
+        </a>
+
+        <!-- 2. Add Artifact -->
+        <a href="#add-artifact" data-nav-target="add-artifact" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-stone-300 hover:bg-charcoal-750 hover:text-sandstone-100 transition-all group">
+          <i class="fas fa-circle-plus w-4 text-stone-400 group-hover:text-terracotta text-sm"></i>
+          <span>Add Artifact Record</span>
+          <span class="ml-auto text-[10px] px-1.5 py-0.2 rounded bg-terracotta/20 text-terracotta font-mono">Field</span>
+        </a>
+
+        <!-- 3. GIS Explorer -->
+        <a href="#gis-explorer" data-nav-target="gis-explorer" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-stone-300 hover:bg-charcoal-750 hover:text-sandstone-100 transition-all group">
+          <i class="fas fa-map-location-dot w-4 text-stone-400 group-hover:text-terracotta text-sm"></i>
+          <span>GIS Explorer</span>
+          <span class="ml-auto text-[10px] px-1.5 py-0.2 rounded bg-gold/20 text-gold font-mono">Core</span>
+        </a>
+
+        <!-- 4. Artifact Repository -->
+        <a href="#repository" data-nav-target="repository" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-stone-300 hover:bg-charcoal-750 hover:text-sandstone-100 transition-all group">
+          <i class="fas fa-box-archive w-4 text-stone-400 group-hover:text-terracotta text-sm"></i>
+          <span>Artifact Repository</span>
+        </a>
+
+        <!-- 5. Spatial Analysis -->
+        <a href="#spatial-analysis" data-nav-target="spatial-analysis" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-stone-300 hover:bg-charcoal-750 hover:text-sandstone-100 transition-all group">
+          <i class="fas fa-brain w-4 text-stone-400 group-hover:text-terracotta text-sm"></i>
+          <span>Spatial Analysis (DBSCAN)</span>
+        </a>
+
+        <!-- 6. Analytics -->
+        <a href="#analytics" data-nav-target="analytics" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-stone-300 hover:bg-charcoal-750 hover:text-sandstone-100 transition-all group">
+          <i class="fas fa-chart-simple w-4 text-stone-400 group-hover:text-terracotta text-sm"></i>
+          <span>Analytics & Chronology</span>
+        </a>
+
+        <!-- 7. Export Data -->
+        <a href="#export-data" data-nav-target="export-data" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-stone-300 hover:bg-charcoal-750 hover:text-sandstone-100 transition-all group">
+          <i class="fas fa-file-export w-4 text-stone-400 group-hover:text-terracotta text-sm"></i>
+          <span>Export Data</span>
+        </a>
+
+        <!-- 8. About ArchaeoMap -->
+        <a href="#about" data-nav-target="about" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-stone-300 hover:bg-charcoal-750 hover:text-sandstone-100 transition-all group">
+          <i class="fas fa-circle-info w-4 text-stone-400 group-hover:text-terracotta text-sm"></i>
+          <span>About ArchaeoMap</span>
+        </a>
+      </nav>
+
+      <!-- Bottom Utilities & Reset Action -->
+      <div class="p-4 border-t border-stone-800/60 bg-charcoal-900/60 space-y-2">
+        <button onclick="if(confirm('Restore original 36 archaeological survey demo records?')){ db.resetToDemo(); app.showToast('Demo Data Restored', 'The original 36 curated archaeological records have been reset.', 'info'); }" 
+                class="w-full py-2 px-3 rounded-lg bg-charcoal-800 hover:bg-charcoal-700 text-stone-400 hover:text-sandstone-200 text-xs font-medium transition-colors flex items-center justify-center gap-2 border border-stone-800">
+          <i class="fas fa-rotate-left text-[11px]"></i>
+          <span>Reset Demo Dataset</span>
+        </button>
+        <div class="text-[10px] text-stone-400 text-center font-mono">
+          v2.4.0 &bull; ArchaeoMap Research GIS
+        </div>
+      </div>
+    </aside>
+
+    <!-- ================================================================
+         MAIN APPLICATION CONTENT BODY
+         ================================================================ -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto bg-charcoal-900">
+
+      <!-- Top Header Navigation Bar (Desktop & Tablet) -->
+      <header class="hidden lg:flex items-center justify-between px-8 py-3.5 bg-charcoal-850/90 backdrop-blur-md border-b border-stone-800/80 sticky top-0 z-30 shadow-sm">
+        
+        <!-- Global Search Bar -->
+        <div class="relative w-96">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-500">
+            <i class="fas fa-magnifying-glass text-xs"></i>
+          </div>
+          <input type="text" id="global-search-input" 
+                 placeholder="Search artifacts, sites, materials, periods..." 
+                 class="w-full pl-9 pr-4 py-1.5 rounded-xl bg-charcoal-800 border border-stone-700/60 text-stone-200 placeholder-stone-500 text-xs focus:outline-none focus:border-terracotta transition-colors shadow-inner font-sans" />
+          
+          <!-- Instant Autocomplete Dropdown -->
+          <div id="global-search-results" class="absolute top-full left-0 right-0 mt-1.5 bg-charcoal-850 border border-stone-700 rounded-xl shadow-2xl max-h-80 overflow-y-auto hidden z-50 divide-y divide-stone-800"></div>
+        </div>
+
+        <!-- Right Utilities & Action Buttons -->
+        <div class="flex items-center gap-3">
+          <button onclick="app.navigateTo('gis-explorer')" class="px-3 py-1.5 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-gold border border-stone-700/60 text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+            <i class="fas fa-map-marked-alt text-xs"></i>
+            <span>Interactive Map</span>
+          </button>
+          <button onclick="app.navigateTo('add-artifact')" class="btn-terracotta px-4 py-1.5 rounded-xl text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg">
+            <i class="fas fa-plus text-[11px]"></i>
+            <span>Record Discovery</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- ==============================================================
+           SECTION 1: DASHBOARD VIEW
+           ============================================================== -->
+      <section id="view-dashboard" class="app-view p-6 lg:p-10 space-y-10">
+
+        <!-- Hero Archaeological Banner -->
+        <div class="relative rounded-3xl overflow-hidden bg-charcoal-800 border border-stone-800 p-8 lg:p-12 hero-archaeo-pattern shadow-2xl">
+          <div class="relative z-10 max-w-3xl space-y-4">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-terracotta/15 border border-terracotta/30 text-terracotta text-[11px] font-mono uppercase tracking-wider font-semibold">
+              <i class="fas fa-landmark text-xs"></i>
+              <span>DIGITAL ARCHAEOLOGY PLATFORM</span>
+            </div>
+
+            <h2 class="font-serif text-3xl lg:text-5xl font-extrabold text-sandstone-100 leading-tight">
+              “Mapping the Past,<br />One Discovery at a Time.”
+            </h2>
+
+            <p class="text-sm lg:text-base text-stone-300 font-sans leading-relaxed max-w-2xl">
+              ArchaeoMap brings archaeological field records, geographic coordinates, artifact documentation and spatial analysis together in one digital research environment.
+            </p>
+
+            <div class="pt-3 flex flex-wrap items-center gap-4">
+              <button onclick="app.navigateTo('add-artifact')" class="btn-terracotta px-6 py-3 rounded-xl text-white text-sm font-semibold flex items-center gap-2 shadow-xl">
+                <i class="fas fa-plus"></i>
+                <span>Record New Artifact</span>
+              </button>
+              <button onclick="app.navigateTo('gis-explorer')" class="px-6 py-3 rounded-xl bg-charcoal-700/80 hover:bg-charcoal-700 text-sandstone-100 border border-stone-700 text-sm font-medium transition-all flex items-center gap-2 hover:border-gold/50 shadow-md">
+                <i class="fas fa-map text-gold"></i>
+                <span>Explore GIS Map</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Subtle ancient map cartographic emblem watermark -->
+          <div class="absolute right-4 bottom-4 opacity-5 pointer-events-none hidden md:block">
+            <i class="fas fa-compass text-[240px] text-sandstone-100"></i>
+          </div>
+        </div>
+
+        <!-- 4 Premium Statistics Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          
+          <!-- Card 1: Total Artifacts -->
+          <div class="archaeo-glass p-6 rounded-2xl border border-stone-800 hover:border-terracotta/40 transition-all group shadow-xl">
+            <div class="flex items-center justify-between text-terracotta mb-3">
+              <span class="text-xs font-mono uppercase tracking-wider text-stone-400 font-semibold">Total Artifacts</span>
+              <div class="w-10 h-10 rounded-xl bg-terracotta/15 flex items-center justify-center text-lg">
+                🏺
+              </div>
+            </div>
+            <div class="flex items-baseline gap-3">
+              <span id="stat-total-artifacts" class="font-serif text-3xl font-extrabold text-sandstone-100">36</span>
+              <span class="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md flex items-center gap-1">
+                <i class="fas fa-arrow-trend-up text-[9px]"></i> +18 this month
+              </span>
+            </div>
+            <p class="text-xs text-stone-400 mt-2">Documented field discoveries</p>
+          </div>
+
+          <!-- Card 2: Survey Sites -->
+          <div class="archaeo-glass p-6 rounded-2xl border border-stone-800 hover:border-gold/40 transition-all group shadow-xl">
+            <div class="flex items-center justify-between text-gold mb-3">
+              <span class="text-xs font-mono uppercase tracking-wider text-stone-400 font-semibold">Survey Sites</span>
+              <div class="w-10 h-10 rounded-xl bg-gold/15 flex items-center justify-center text-lg">
+                📍
+              </div>
+            </div>
+            <div class="flex items-baseline gap-3">
+              <span id="stat-survey-sites" class="font-serif text-3xl font-extrabold text-sandstone-100">5</span>
+              <span class="text-[11px] font-mono text-gold bg-gold/10 px-2 py-0.5 rounded-md">
+                5 active sectors
+              </span>
+            </div>
+            <p class="text-xs text-stone-400 mt-2">Georeferenced excavation zones</p>
+          </div>
+
+          <!-- Card 3: Artifact Categories -->
+          <div class="archaeo-glass p-6 rounded-2xl border border-stone-800 hover:border-blue-500/40 transition-all group shadow-xl">
+            <div class="flex items-center justify-between text-blue-400 mb-3">
+              <span class="text-xs font-mono uppercase tracking-wider text-stone-400 font-semibold">Artifact Categories</span>
+              <div class="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center text-lg">
+                🧱
+              </div>
+            </div>
+            <div class="flex items-baseline gap-3">
+              <span id="stat-categories" class="font-serif text-3xl font-extrabold text-sandstone-100">8</span>
+              <span class="text-[11px] font-mono text-blue-300 bg-blue-500/10 px-2 py-0.5 rounded-md">
+                Standardized taxonomy
+              </span>
+            </div>
+            <p class="text-xs text-stone-400 mt-2">Pottery, coins, tools, brick...</p>
+          </div>
+
+          <!-- Card 4: Spatial Clusters -->
+          <div class="archaeo-glass p-6 rounded-2xl border border-stone-800 hover:border-purple-500/40 transition-all group shadow-xl">
+            <div class="flex items-center justify-between text-purple-400 mb-3">
+              <span class="text-xs font-mono uppercase tracking-wider text-stone-400 font-semibold">Spatial Clusters</span>
+              <div class="w-10 h-10 rounded-xl bg-purple-500/15 flex items-center justify-center text-lg">
+                🧠
+              </div>
+            </div>
+            <div class="flex items-baseline gap-3">
+              <span id="stat-clusters" class="font-serif text-3xl font-extrabold text-sandstone-100">5</span>
+              <span class="text-[11px] font-mono text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-md">
+                DBSCAN generated
+              </span>
+            </div>
+            <p class="text-xs text-stone-400 mt-2">Density concentrations identified</p>
+          </div>
+
+        </div>
+
+        <!-- Visualizations Grid (4 Professional Archaeological Charts) -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-serif text-xl font-bold text-sandstone-100">Field Survey Visualizations</h3>
+              <p class="text-xs text-stone-400">Distribution metrics across typology, material culture, and stratigraphy</p>
+            </div>
+            <button onclick="app.navigateTo('analytics')" class="text-xs text-gold hover:text-gold-hover font-medium flex items-center gap-1 transition-colors">
+              <span>Deep-Dive Analytics</span>
+              <i class="fas fa-arrow-right text-[10px]"></i>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Chart A: Artifact Type Distribution -->
+            <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-terracotta"></span>
+                  <h4 class="font-serif text-sm font-bold text-sandstone-100">Artifact Type Distribution</h4>
+                </div>
+                <span class="text-[10px] font-mono text-stone-400">Typology Breakdown</span>
+              </div>
+              <div class="h-64 relative">
+                <canvas id="chart-dash-type"></canvas>
+              </div>
+              <p class="text-[11px] text-stone-400 mt-3 pt-2 border-t border-stone-800/60 italic text-center">
+                Pottery, Coins, Sculptures, Tools, Jewelry, Inscriptions, Bricks, Other
+              </p>
+            </div>
+
+            <!-- Chart B: Material Distribution -->
+            <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-sandstone-400"></span>
+                  <h4 class="font-serif text-sm font-bold text-sandstone-100">Material Distribution</h4>
+                </div>
+                <span class="text-[10px] font-mono text-stone-400">Raw Medium Composition</span>
+              </div>
+              <div class="h-64 relative">
+                <canvas id="chart-dash-material"></canvas>
+              </div>
+              <p class="text-[11px] text-stone-400 mt-3 pt-2 border-t border-stone-800/60 italic text-center">
+                Terracotta, Stone, Clay, Bronze, Iron, Copper, Other
+              </p>
+            </div>
+
+            <!-- Chart C: Historical Period Distribution -->
+            <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-gold"></span>
+                  <h4 class="font-serif text-sm font-bold text-sandstone-100">Historical Period Distribution</h4>
+                </div>
+                <span class="text-[10px] font-mono text-stone-400">Chronological Eras</span>
+              </div>
+              <div class="h-64 relative">
+                <canvas id="chart-dash-period"></canvas>
+              </div>
+              <p class="text-[11px] text-stone-400 mt-3 pt-2 border-t border-stone-800/60 italic text-center">
+                Prehistoric, Ancient, Early Medieval, Medieval, Colonial, Modern
+              </p>
+            </div>
+
+            <!-- Chart D: Site-wise Artifact Count -->
+            <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-terracotta"></span>
+                  <h4 class="font-serif text-sm font-bold text-sandstone-100">Site-wise Artifact Count</h4>
+                </div>
+                <span class="text-[10px] font-mono text-stone-400">Sector Comparison</span>
+              </div>
+              <div class="h-64 relative">
+                <canvas id="chart-dash-site"></canvas>
+              </div>
+              <p class="text-[11px] text-stone-400 mt-3 pt-2 border-t border-stone-800/60 italic text-center">
+                Comparative observation counts across Site A through Site E
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Recent Discoveries Section -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-serif text-xl font-bold text-sandstone-100">Recent Discoveries</h3>
+              <p class="text-xs text-stone-400">Latest archaeological field entries recorded in the repository</p>
+            </div>
+            <button onclick="app.navigateTo('repository')" class="text-xs text-gold hover:text-gold-hover font-medium flex items-center gap-1 transition-colors">
+              <span>View All Records in Repository</span>
+              <i class="fas fa-arrow-right text-[10px]"></i>
+            </button>
+          </div>
+
+          <!-- Cards Grid -->
+          <div id="recent-discoveries-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+
+      </section>
+
+      <!-- ==============================================================
+           SECTION 2: ADD ARTIFACT PAGE (FIELD RECORDING FORM)
+           ============================================================== -->
+      <section id="view-add-artifact" class="app-view p-6 lg:p-10 space-y-8 hidden">
+        
+        <!-- Header -->
+        <div class="max-w-4xl">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-terracotta/15 text-terracotta text-xs font-mono uppercase font-semibold mb-2">
+            <i class="fas fa-clipboard-list"></i> Field Registration
+          </div>
+          <h2 class="font-serif text-3xl font-extrabold text-sandstone-100">Record a New Discovery</h2>
+          <p class="text-sm text-stone-300 mt-1">
+            Document artifact information, location, context and photographic evidence.
+          </p>
+        </div>
+
+        <!-- Success notification banner -->
+        <div id="add-artifact-success" class="hidden p-5 rounded-2xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-200 shadow-xl flex items-center gap-4 max-w-4xl">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-xl shrink-0 text-emerald-400">
+            ✓
+          </div>
+          <div class="flex-1">
+            <h4 class="font-serif font-bold text-sm text-emerald-100">Artifact successfully recorded</h4>
+            <p class="text-xs text-emerald-300">Your archaeological field record has been added to the repository and synced with the GIS engine.</p>
+          </div>
+          <button onclick="app.navigateTo('repository')" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-500 transition-colors">
+            View in Repository
+          </button>
+        </div>
+
+        <!-- Form Container -->
+        <form id="form-add-artifact" class="max-w-4xl space-y-8 bg-charcoal-800 p-8 rounded-3xl border border-stone-800 shadow-2xl">
+          
+          <!-- SECTION 1: Artifact Identification -->
+          <div class="space-y-4 pb-6 border-b border-stone-700/60">
+            <div class="flex items-center gap-2 text-gold">
+              <i class="fas fa-fingerprint text-base"></i>
+              <h3 class="font-serif text-base font-bold text-sandstone-100 uppercase tracking-wider">
+                Section 1: Artifact Identification
+              </h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <!-- Name -->
+              <div class="space-y-1.5 md:col-span-2">
+                <label for="artifact-name" class="block text-xs font-semibold text-stone-300">
+                  Artifact Name <span class="text-terracotta">*</span>
+                </label>
+                <input type="text" id="artifact-name" required placeholder="e.g. Terracotta Vessel Fragment, Carved Figurine..."
+                       class="w-full px-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs focus:outline-none focus:border-terracotta transition-colors shadow-inner" />
+              </div>
+
+              <!-- Type -->
+              <div class="space-y-1.5">
+                <label for="artifact-type" class="block text-xs font-semibold text-stone-300">Artifact Type</label>
+                <select id="artifact-type" class="w-full px-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs focus:outline-none focus:border-terracotta transition-colors">
+                  <option value="Pottery">Pottery</option>
+                  <option value="Coin">Coin</option>
+                  <option value="Sculpture">Sculpture</option>
+                  <option value="Tool">Tool</option>
+                  <option value="Jewelry">Jewelry</option>
+                  <option value="Inscription">Inscription</option>
+                  <option value="Brick">Brick</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <!-- Material -->
+              <div class="space-y-1.5">
+                <label for="artifact-material" class="block text-xs font-semibold text-stone-300">Material</label>
+                <select id="artifact-material" class="w-full px-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs focus:outline-none focus:border-terracotta transition-colors">
+                  <option value="Terracotta">Terracotta</option>
+                  <option value="Stone">Stone</option>
+                  <option value="Clay">Clay</option>
+                  <option value="Bronze">Bronze</option>
+                  <option value="Iron">Iron</option>
+                  <option value="Copper">Copper</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <!-- Period -->
+              <div class="space-y-1.5 md:col-span-2">
+                <label for="artifact-period" class="block text-xs font-semibold text-stone-300">Historical Period</label>
+                <select id="artifact-period" class="w-full px-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs focus:outline-none focus:border-terracotta transition-colors">
+                  <option value="Ancient">Ancient</option>
+                  <option value="Prehistoric">Prehistoric</option>
+                  <option value="Early Medieval">Early Medieval</option>
+                  <option value="Medieval">Medieval</option>
+                  <option value="Late Medieval">Late Medieval</option>
+                  <option value="Colonial">Colonial</option>
+                  <option value="Modern">Modern</option>
+                  <option value="Unknown">Unknown</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 2: Archaeological Context -->
+          <div class="space-y-4 pb-6 border-b border-stone-700/60">
+            <div class="flex items-center gap-2 text-gold">
+              <i class="fas fa-layer-group text-base"></i>
+              <h3 class="font-serif text-base font-bold text-sandstone-100 uppercase tracking-wider">
+                Section 2: Archaeological Context
+              </h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <!-- Site -->
+              <div class="space-y-1.5">
+                <label for="artifact-site" class="block text-xs font-semibold text-stone-300">
+                  Archaeological Site <span class="text-terracotta">*</span>
+                </label>
+                <select id="artifact-site" required class="w-full px-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs focus:outline-none focus:border-terracotta transition-colors">
+                  <option value="Site A">Site A (Citadel Sector)</option>
+                  <option value="Site B">Site B (Southern Terraces)</option>
+                  <option value="Site C">Site C (Eastern Mound)</option>
+                  <option value="Site D">Site D (Riverbank Sector)</option>
+                  <option value="Site E">Site E (Outer Enclosure)</option>
+                </select>
+              </div>
+
+              <!-- Excavation Area / Trench -->
+              <div class="space-y-1.5">
+                <label for="artifact-excavation-area" class="block text-xs font-semibold text-stone-300">Excavation Area / Trench</label>
+                <input type="text" id="artifact-excavation-area" placeholder="e.g. Trench IV, Bastion Sector..." 
+                       class="w-full px-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs focus:outline-none focus:border-terracotta transition-colors shadow-inner" />
+              </div>
+
+              <!-- Layer / Context -->
+              <div class="space-y-1.5">
+                <label for="artifact-layer" class="block text-xs font-semibold text-stone-300">Layer / Stratigraphic Context</label>
+                <input type="text" id="artifact-layer" placeholder="e.g. Stratum III (Ash Fill), Bedrock cut..." 
+                       class="w-full px-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs focus:outline-none focus:border-terracotta transition-colors shadow-inner" />
+              </div>
+
+              <!-- Depth -->
+              <div class="space-y-1.5">
+                <label for="artifact-depth" class="block text-xs font-semibold text-stone-300">
+                  Excavation Depth (meters) <span class="text-terracotta">*</span>
+                </label>
+                <input type="number" id="artifact-depth" step="0.01" min="0" max="25" required value="1.20"
+                       class="w-full px-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs font-mono focus:outline-none focus:border-terracotta transition-colors shadow-inner" />
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 3: Geographical Location -->
+          <div class="space-y-4 pb-6 border-b border-stone-700/60">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 text-gold">
+                <i class="fas fa-location-crosshairs text-base"></i>
+                <h3 class="font-serif text-base font-bold text-sandstone-100 uppercase tracking-wider">
+                  Section 3: Geographical Location
+                </h3>
+              </div>
+              <span class="text-[11px] text-stone-400">Click or drag pin on mini-map to adjust coordinates</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div class="space-y-1.5">
+                <label for="artifact-lat" class="block text-xs font-semibold text-stone-300">
+                  Latitude (°N) <span class="text-terracotta">*</span>
+                </label>
+                <input type="number" id="artifact-lat" step="0.000001" min="-90" max="90" required value="20.296100"
+                       class="w-full px-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs font-mono focus:outline-none focus:border-terracotta transition-colors shadow-inner" />
+              </div>
+
+              <div class="space-y-1.5">
+                <label for="artifact-lon" class="block text-xs font-semibold text-stone-300">
+                  Longitude (°E) <span class="text-terracotta">*</span>
+                </label>
+                <input type="number" id="artifact-lon" step="0.000001" min="-180" max="180" required value="85.824500"
+                       class="w-full px-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs font-mono focus:outline-none focus:border-terracotta transition-colors shadow-inner" />
+              </div>
+            </div>
+
+            <!-- Interactive Mini-Map -->
+            <div class="rounded-2xl overflow-hidden border border-stone-700 shadow-xl h-64 relative bg-charcoal-900">
+              <div id="picker-map" class="w-full h-full"></div>
+              <div class="absolute bottom-2 left-2 z-[400] bg-charcoal-900/90 backdrop-blur-sm px-2.5 py-1 rounded text-[10px] text-sandstone-300 border border-stone-700 font-mono">
+                Interactive Survey Coordinate Picker
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 4: Description -->
+          <div class="space-y-4 pb-6 border-b border-stone-700/60">
+            <div class="flex items-center gap-2 text-gold">
+              <i class="fas fa-feather-pointed text-base"></i>
+              <h3 class="font-serif text-base font-bold text-sandstone-100 uppercase tracking-wider">
+                Section 4: Field Description
+              </h3>
+            </div>
+
+            <div class="space-y-1.5">
+              <label for="artifact-description" class="block text-xs font-semibold text-stone-300">
+                Artifact Description / Field Notes
+              </label>
+              <textarea id="artifact-description" rows="4" placeholder="Document morphological features, conservation status, surface patination, fabric inclusions, and immediate stratigraphic context..."
+                        class="w-full px-4 py-3 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs focus:outline-none focus:border-terracotta transition-colors shadow-inner leading-relaxed"></textarea>
+            </div>
+
+            <div class="space-y-1.5">
+              <label for="artifact-recorded-by" class="block text-xs font-semibold text-stone-300">Recorded By / Field Archaeologist</label>
+              <input type="text" id="artifact-recorded-by" value="Dr. A. Sen (Senior Field Archaeologist)"
+                     class="w-full px-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs focus:outline-none focus:border-terracotta transition-colors shadow-inner" />
+            </div>
+          </div>
+
+          <!-- SECTION 5: Photographic Documentation -->
+          <div class="space-y-4 pb-6 border-b border-stone-700/60">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 text-gold">
+                <i class="fas fa-camera text-base"></i>
+                <h3 class="font-serif text-base font-bold text-sandstone-100 uppercase tracking-wider">
+                  Section 5: Photographic Documentation
+                </h3>
+              </div>
+              <span class="text-[11px] text-stone-400">Supports JPG, JPEG, PNG, WEBP</span>
+            </div>
+
+            <!-- Drag and Drop Image Uploader -->
+            <input type="file" id="artifact-file-input" accept="image/jpeg, image/png, image/webp" class="hidden" />
+            
+            <div id="artifact-dropzone" class="p-8 border-2 border-dashed border-stone-700 hover:border-terracotta rounded-2xl text-center cursor-pointer transition-colors dropzone-pulse bg-charcoal-900/50 group">
+              <div class="w-12 h-12 rounded-2xl bg-charcoal-800 text-terracotta mx-auto flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
+                <i class="fas fa-cloud-arrow-up"></i>
+              </div>
+              <h4 class="font-serif text-sm font-bold text-sandstone-100">Upload Artifact Photograph</h4>
+              <p class="text-xs text-stone-400 mt-1">Drag and drop file here, or click to browse</p>
+              <p class="text-[10px] text-stone-400 mt-2 font-mono">JPG &bull; JPEG &bull; PNG &bull; WEBP (Max 10MB)</p>
+            </div>
+
+            <!-- Upload Live Preview Container -->
+            <div id="upload-preview-container" class="hidden relative rounded-2xl overflow-hidden border border-stone-700 bg-stone-900 h-56 w-full max-w-sm mx-auto shadow-xl">
+              <img id="upload-preview-img" src="" alt="Artifact Preview" class="w-full h-full object-cover" />
+              <button type="button" id="remove-upload-btn" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-charcoal-900/80 text-white hover:bg-rose-600 flex items-center justify-center transition-colors">
+                <i class="fas fa-times text-xs"></i>
+              </button>
+            </div>
+
+            <!-- Curated Quick Preset Photos -->
+            <div class="space-y-2 pt-2">
+              <span class="text-[11px] text-stone-400 block font-mono uppercase">Or choose from curated specimen photographs:</span>
+              <div class="flex flex-wrap gap-2">
+                <button type="button" data-url="https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=800&q=80" class="photo-preset-btn px-2.5 py-1 rounded-lg bg-charcoal-900 border border-stone-700 hover:border-terracotta text-stone-300 text-xs flex items-center gap-1.5 transition-colors">
+                  <i class="fas fa-wine-bottle text-terracotta"></i> Pottery
+                </button>
+                <button type="button" data-url="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=800&q=80" class="photo-preset-btn px-2.5 py-1 rounded-lg bg-charcoal-900 border border-stone-700 hover:border-gold text-stone-300 text-xs flex items-center gap-1.5 transition-colors">
+                  <i class="fas fa-coins text-gold"></i> Coin
+                </button>
+                <button type="button" data-url="https://images.unsplash.com/photo-1544967082-d9d25d867d66?auto=format&fit=crop&w=800&q=80" class="photo-preset-btn px-2.5 py-1 rounded-lg bg-charcoal-900 border border-stone-700 hover:border-purple-400 text-stone-300 text-xs flex items-center gap-1.5 transition-colors">
+                  <i class="fas fa-monument text-purple-400"></i> Sculpture
+                </button>
+                <button type="button" data-url="https://images.unsplash.com/photo-1595769816263-9b910be24d5f?auto=format&fit=crop&w=800&q=80" class="photo-preset-btn px-2.5 py-1 rounded-lg bg-charcoal-900 border border-stone-700 hover:border-blue-400 text-stone-300 text-xs flex items-center gap-1.5 transition-colors">
+                  <i class="fas fa-hammer text-blue-400"></i> Spearhead
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 6: Save Action -->
+          <div class="pt-2 flex items-center justify-between">
+            <button type="button" onclick="app.navigateTo('repository')" class="px-5 py-2.5 rounded-xl bg-charcoal-700 hover:bg-charcoal-600 text-stone-300 text-xs font-medium transition-colors">
+              Cancel
+            </button>
+            <button type="submit" class="btn-terracotta px-8 py-3 rounded-xl text-white text-sm font-bold flex items-center gap-2 shadow-2xl">
+              <i class="fas fa-save"></i>
+              <span>Save Artifact Record</span>
+            </button>
+          </div>
+
+        </form>
+
+      </section>
+
+      <!-- ==============================================================
+           SECTION 3: GIS EXPLORER (CORE GIS VISUAL EXPERIENCE)
+           ============================================================== -->
+      <section id="view-gis-explorer" class="app-view h-full flex flex-col p-6 space-y-4 hidden">
+        
+        <!-- Header & Subtitle -->
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-gold/15 text-gold text-xs font-mono uppercase font-semibold mb-1">
+              <i class="fas fa-satellite"></i> GIS Geospatial Visualizer
+            </div>
+            <h2 class="font-serif text-3xl font-extrabold text-sandstone-100">GIS Explorer</h2>
+            <p class="text-xs text-stone-400 mt-0.5">
+              Explore the geographic distribution of recorded archaeological discoveries.
+            </p>
+          </div>
+
+          <!-- Layer Switcher Buttons -->
+          <div class="flex items-center gap-1.5 p-1 bg-charcoal-800 rounded-xl border border-stone-800 shadow-md">
+            <button data-layer="street" class="gis-layer-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-terracotta text-white border border-terracotta transition-all flex items-center gap-1">
+              <i class="fas fa-map"></i> Street Map
+            </button>
+            <button data-layer="topo" class="gis-layer-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-charcoal-700 text-stone-300 border border-stone-700 transition-all flex items-center gap-1 hover:text-white">
+              <i class="fas fa-mountain"></i> Topographic
+            </button>
+            <button data-layer="satellite" class="gis-layer-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-charcoal-700 text-stone-300 border border-stone-700 transition-all flex items-center gap-1 hover:text-white">
+              <i class="fas fa-globe"></i> Satellite
+            </button>
+            <button data-layer="dark" class="gis-layer-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-charcoal-700 text-stone-300 border border-stone-700 transition-all flex items-center gap-1 hover:text-white">
+              <i class="fas fa-moon"></i> Dark Theme
+            </button>
+          </div>
+        </div>
+
+        <!-- Main GIS Map Viewport & Floating Control Panel -->
+        <div class="relative flex-1 min-h-[600px] w-full rounded-3xl overflow-hidden border border-stone-800 shadow-2xl bg-charcoal-800">
+          
+          <!-- Leaflet Map Container -->
+          <div id="gis-map" class="w-full h-full z-10"></div>
+
+          <!-- Floating Map Control Panel (Top-Right) -->
+          <div class="absolute top-4 right-4 z-[400] w-80 max-w-[calc(100%-2rem)] bg-charcoal-850/95 backdrop-blur-md rounded-2xl border border-stone-700/70 p-4 shadow-2xl space-y-4 text-xs font-sans">
+            <div class="flex items-center justify-between border-b border-stone-700/60 pb-2">
+              <div class="flex items-center gap-1.5 text-sandstone-100 font-serif font-bold">
+                <i class="fas fa-sliders text-gold"></i>
+                <span>GIS Filter Controls</span>
+              </div>
+              <span id="gis-filtered-count" class="text-[10px] font-mono px-2 py-0.5 rounded bg-charcoal-700 text-gold border border-stone-700">
+                36 Visible
+              </span>
+            </div>
+
+            <!-- Filters -->
+            <div class="space-y-2">
+              <div>
+                <label for="gis-filter-type" class="block text-[11px] text-stone-400 mb-1">Artifact Type</label>
+                <select id="gis-filter-type" class="w-full px-2.5 py-1.5 rounded-lg bg-charcoal-800 border border-stone-700 text-stone-200 text-xs focus:outline-none focus:border-terracotta">
+                  <option value="All">All Artifact Types</option>
+                  <option value="Pottery">Pottery</option>
+                  <option value="Coin">Coin</option>
+                  <option value="Sculpture">Sculpture</option>
+                  <option value="Tool">Tool</option>
+                  <option value="Jewelry">Jewelry</option>
+                  <option value="Inscription">Inscription</option>
+                  <option value="Brick">Brick</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label for="gis-filter-material" class="block text-[11px] text-stone-400 mb-1">Material</label>
+                  <select id="gis-filter-material" class="w-full px-2.5 py-1.5 rounded-lg bg-charcoal-800 border border-stone-700 text-stone-200 text-xs focus:outline-none focus:border-terracotta">
+                    <option value="All">All Materials</option>
+                    <option value="Terracotta">Terracotta</option>
+                    <option value="Stone">Stone</option>
+                    <option value="Clay">Clay</option>
+                    <option value="Bronze">Bronze</option>
+                    <option value="Iron">Iron</option>
+                    <option value="Copper">Copper</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="gis-filter-period" class="block text-[11px] text-stone-400 mb-1">Period</label>
+                  <select id="gis-filter-period" class="w-full px-2.5 py-1.5 rounded-lg bg-charcoal-800 border border-stone-700 text-stone-200 text-xs focus:outline-none focus:border-terracotta">
+                    <option value="All">All Periods</option>
+                    <option value="Ancient">Ancient</option>
+                    <option value="Prehistoric">Prehistoric</option>
+                    <option value="Early Medieval">Early Medieval</option>
+                    <option value="Medieval">Medieval</option>
+                    <option value="Late Medieval">Late Medieval</option>
+                    <option value="Colonial">Colonial</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label for="gis-filter-site" class="block text-[11px] text-stone-400 mb-1">Survey Sector</label>
+                <select id="gis-filter-site" class="w-full px-2.5 py-1.5 rounded-lg bg-charcoal-800 border border-stone-700 text-stone-200 text-xs focus:outline-none focus:border-terracotta">
+                  <option value="All">All Survey Sectors</option>
+                  <option value="Site A">Site A (Citadel Sector)</option>
+                  <option value="Site B">Site B (Southern Terraces)</option>
+                  <option value="Site C">Site C (Eastern Mound)</option>
+                  <option value="Site D">Site D (Riverbank Sector)</option>
+                  <option value="Site E">Site E (Outer Enclosure)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Toggles -->
+            <div class="space-y-2 pt-2 border-t border-stone-700/50">
+              <label class="flex items-center justify-between cursor-pointer">
+                <span class="text-stone-300">Show Artifact Markers</span>
+                <input type="checkbox" id="gis-toggle-markers" checked class="rounded border-stone-700 text-terracotta focus:ring-0" />
+              </label>
+
+              <label class="flex items-center justify-between cursor-pointer">
+                <div>
+                  <span class="text-stone-300 block">Show Density Heatmap</span>
+                  <span class="text-[9px] text-stone-400">Concentration gradient</span>
+                </div>
+                <input type="checkbox" id="gis-toggle-heatmap" class="rounded border-stone-700 text-terracotta focus:ring-0" />
+              </label>
+
+              <label class="flex items-center justify-between cursor-pointer">
+                <div>
+                  <span class="text-stone-300 block">Show Spatial Clusters</span>
+                  <span class="text-[9px] text-stone-400">DBSCAN convex hulls</span>
+                </div>
+                <input type="checkbox" id="gis-toggle-clusters" checked class="rounded border-stone-700 text-terracotta focus:ring-0" />
+              </label>
+            </div>
+
+            <!-- Actions -->
+            <div class="pt-2 border-t border-stone-700/50 flex gap-2">
+              <button id="gis-reset-filters" class="flex-1 py-1.5 rounded-lg bg-charcoal-800 hover:bg-charcoal-700 text-stone-400 hover:text-white border border-stone-700 text-xs transition-colors">
+                Reset Filters
+              </button>
+              <button id="gis-btn-fit-bounds" class="px-3 py-1.5 rounded-lg bg-charcoal-800 hover:bg-charcoal-700 text-gold border border-stone-700 text-xs transition-colors" title="Fit Survey Grid">
+                <i class="fas fa-expand"></i>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Bottom-Right HUD: Coordinates & Zoom -->
+          <div class="absolute bottom-4 right-4 z-[400] flex items-center gap-2 bg-charcoal-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-stone-700/70 text-[11px] font-mono shadow-xl">
+            <span class="text-stone-400 flex items-center gap-1"><i class="fas fa-crosshairs text-terracotta"></i> <span id="hud-lat">20.2965° N</span>, <span id="hud-lon">85.8255° E</span></span>
+            <span class="text-stone-600">|</span>
+            <span id="hud-zoom" class="text-gold">Zoom: 15</span>
+          </div>
+
+          <!-- Type Color Legend (Bottom-Left) -->
+          <div class="absolute bottom-8 left-4 z-[400] bg-charcoal-900/90 backdrop-blur-md px-3 py-2 rounded-xl border border-stone-700/70 shadow-xl hidden md:block max-w-xs">
+            <span class="text-[10px] font-mono text-stone-400 block uppercase mb-1">Typology Key</span>
+            <div class="grid grid-cols-4 gap-x-2 gap-y-1 text-[10px]">
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#C85A32]"></span> Pottery</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#D4AF37]"></span> Coin</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#8E44AD]"></span> Sculpture</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#2980B9]"></span> Tool</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#E84393]"></span> Jewelry</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#27AE60]"></span> Inscription</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#E67E22]"></span> Brick</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#7F8C8D]"></span> Other</span>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ==============================================================
+           SECTION 4: ARTIFACT REPOSITORY
+           ============================================================== -->
+      <section id="view-repository" class="app-view p-6 lg:p-10 space-y-6 hidden">
+        
+        <!-- Header -->
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-terracotta/15 text-terracotta text-xs font-mono uppercase font-semibold mb-1">
+              <i class="fas fa-database"></i> Specimen Archive
+            </div>
+            <h2 class="font-serif text-3xl font-extrabold text-sandstone-100">Artifact Repository</h2>
+            <p class="text-xs text-stone-400 mt-0.5">
+              Comprehensive catalog of georeferenced archaeological specimens and excavation context.
+            </p>
+          </div>
+
+          <!-- View Mode Toggle (Grid vs Table) -->
+          <div class="flex items-center gap-1 bg-charcoal-800 p-1 rounded-xl border border-stone-800 shadow">
+            <button id="repo-view-grid-btn" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-charcoal-700 text-gold transition-colors flex items-center gap-1.5">
+              <i class="fas fa-grip"></i> <span>Grid View</span>
+            </button>
+            <button id="repo-view-table-btn" class="px-3 py-1.5 rounded-lg text-xs font-medium text-stone-400 hover:text-stone-200 transition-colors flex items-center gap-1.5">
+              <i class="fas fa-table-list"></i> <span>Table View</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="bg-charcoal-800 p-5 rounded-2xl border border-stone-800 shadow-xl space-y-4">
+          
+          <!-- Search Bar -->
+          <div class="relative w-full">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-500">
+              <i class="fas fa-magnifying-glass text-xs"></i>
+            </div>
+            <input type="text" id="repo-search-input" 
+                   placeholder="Search artifacts, sites, materials, descriptions..." 
+                   class="w-full pl-9 pr-4 py-2 rounded-xl bg-charcoal-900 border border-stone-700/60 text-stone-200 placeholder-stone-500 text-xs focus:outline-none focus:border-terracotta transition-colors shadow-inner" />
+          </div>
+
+          <!-- Multi-Dropdown Filters -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div>
+              <label for="repo-filter-type" class="block text-[10px] uppercase font-mono text-stone-400 mb-1">Artifact Type</label>
+              <select id="repo-filter-type" class="w-full px-3 py-2 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-200 text-xs focus:outline-none focus:border-terracotta">
+                <option value="All">All Types</option>
+                <option value="Pottery">Pottery</option>
+                <option value="Coin">Coin</option>
+                <option value="Sculpture">Sculpture</option>
+                <option value="Tool">Tool</option>
+                <option value="Jewelry">Jewelry</option>
+                <option value="Inscription">Inscription</option>
+                <option value="Brick">Brick</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="repo-filter-material" class="block text-[10px] uppercase font-mono text-stone-400 mb-1">Material</label>
+              <select id="repo-filter-material" class="w-full px-3 py-2 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-200 text-xs focus:outline-none focus:border-terracotta">
+                <option value="All">All Materials</option>
+                <option value="Terracotta">Terracotta</option>
+                <option value="Stone">Stone</option>
+                <option value="Clay">Clay</option>
+                <option value="Bronze">Bronze</option>
+                <option value="Iron">Iron</option>
+                <option value="Copper">Copper</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="repo-filter-period" class="block text-[10px] uppercase font-mono text-stone-400 mb-1">Historical Period</label>
+              <select id="repo-filter-period" class="w-full px-3 py-2 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-200 text-xs focus:outline-none focus:border-terracotta">
+                <option value="All">All Periods</option>
+                <option value="Ancient">Ancient</option>
+                <option value="Prehistoric">Prehistoric</option>
+                <option value="Early Medieval">Early Medieval</option>
+                <option value="Medieval">Medieval</option>
+                <option value="Late Medieval">Late Medieval</option>
+                <option value="Colonial">Colonial</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="repo-filter-site" class="block text-[10px] uppercase font-mono text-stone-400 mb-1">Site</label>
+              <select id="repo-filter-site" class="w-full px-3 py-2 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-200 text-xs focus:outline-none focus:border-terracotta">
+                <option value="All">All Sites</option>
+                <option value="Site A">Site A</option>
+                <option value="Site B">Site B</option>
+                <option value="Site C">Site C</option>
+                <option value="Site D">Site D</option>
+                <option value="Site E">Site E</option>
+              </select>
+            </div>
+
+            <!-- Depth Range Slider -->
+            <div class="col-span-2 sm:col-span-1">
+              <div class="flex items-center justify-between mb-1">
+                <label for="repo-filter-depth" class="block text-[10px] uppercase font-mono text-stone-400">Max Depth</label>
+                <span id="repo-depth-val" class="text-[10px] font-mono text-gold">5.0 m</span>
+              </div>
+              <input type="range" id="repo-filter-depth" min="0.2" max="5.0" step="0.1" value="5.0" 
+                     class="w-full h-2 bg-charcoal-900 rounded-lg appearance-none cursor-pointer accent-terracotta" />
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-2 border-t border-stone-700/40 text-xs">
+            <span id="repo-results-count" class="text-stone-400 font-mono text-[11px]"></span>
+            <button id="repo-filter-reset" class="text-stone-400 hover:text-white transition-colors text-xs flex items-center gap-1">
+              <i class="fas fa-rotate-left text-[10px]"></i> Reset Filters
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Repository Content (Cards Grid or Table) -->
+        <div id="repo-content-container"></div>
+
+        <!-- Pagination Bar -->
+        <div id="repo-pagination" class="flex justify-center pt-4"></div>
+
+      </section>
+
+      <!-- ==============================================================
+           SECTION 5: SPATIAL ANALYSIS (DBSCAN CLUSTERING)
+           ============================================================== -->
+      <section id="view-spatial-analysis" class="app-view p-6 lg:p-10 space-y-8 hidden">
+        
+        <!-- Header -->
+        <div class="max-w-4xl">
+          <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-purple-500/15 text-purple-400 text-xs font-mono uppercase font-semibold mb-1">
+            <i class="fas fa-brain"></i> Machine Learning Spatial Clustering
+          </div>
+          <h2 class="font-serif text-3xl font-extrabold text-sandstone-100">Spatial Analysis</h2>
+          <p class="text-xs text-stone-400 mt-1 leading-relaxed">
+            Density-Based Spatial Clustering of Applications with Noise (DBSCAN) algorithmic analysis on artifact coordinates.
+          </p>
+        </div>
+
+        <!-- Scientific Academic Caution Alert (as required in prompt) -->
+        <div class="p-5 rounded-2xl bg-amber-950/40 border border-amber-600/40 text-amber-200 text-xs leading-relaxed flex items-start gap-3 shadow-lg">
+          <i class="fas fa-circle-exclamation text-amber-400 text-base mt-0.5 shrink-0"></i>
+          <div>
+            <strong class="font-serif text-sandstone-100 text-sm block mb-0.5">Archaeological Methodology Note</strong>
+            Spatial clusters represent concentrations of recorded observations and may help researchers identify areas requiring further archaeological investigation.
+            <span class="block mt-1 font-semibold text-amber-300">Important: Do not interpret clusters as confirmed archaeological settlements or historical structures without physical stratigraphic and architectural verification.</span>
+          </div>
+        </div>
+
+        <!-- Interactive DBSCAN Tuner Bar -->
+        <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-sliders text-gold"></i>
+              <h4 class="font-serif text-sm font-bold text-sandstone-100">DBSCAN Hyperparameter Tuner</h4>
+            </div>
+            <span class="text-[10px] font-mono text-stone-400">Great-Circle Haversine Distance</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 items-end">
+            <!-- Epsilon Slider -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <label for="spatial-eps-range" class="text-stone-300 font-medium">Epsilon Threshold (ε)</label>
+                <span id="spatial-eps-val" class="font-mono text-gold font-bold">0.48 km</span>
+              </div>
+              <input type="range" id="spatial-eps-range" min="0.10" max="1.50" step="0.02" value="0.48"
+                     class="w-full h-2 bg-charcoal-900 rounded-lg appearance-none cursor-pointer accent-terracotta" />
+              <span class="text-[10px] text-stone-400 block">Neighborhood search radius</span>
+            </div>
+
+            <!-- MinPoints Input -->
+            <div class="space-y-1.5">
+              <label for="spatial-minpts-input" class="block text-xs font-medium text-stone-300">Minimum Points (MinPts)</label>
+              <input type="number" id="spatial-minpts-input" min="2" max="15" value="3"
+                     class="w-full px-3 py-1.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs font-mono focus:outline-none focus:border-terracotta" />
+              <span class="text-[10px] text-stone-400 block">Threshold to declare a core observation</span>
+            </div>
+
+            <!-- Recluster Action -->
+            <button id="spatial-recluster-btn" class="btn-terracotta w-full py-2.5 px-4 rounded-xl text-white text-xs font-bold shadow-lg flex items-center justify-center gap-2">
+              <i class="fas fa-arrows-rotate"></i>
+              <span>Recompute Clusters</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI Metrics Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div class="archaeo-glass p-4 rounded-xl border border-stone-800">
+            <span class="text-[10px] font-mono text-stone-400 uppercase block">Total Spatial Clusters</span>
+            <span id="kpi-spatial-clusters" class="font-serif text-2xl font-bold text-sandstone-100">5</span>
+          </div>
+
+          <div class="archaeo-glass p-4 rounded-xl border border-stone-800">
+            <span class="text-[10px] font-mono text-stone-400 uppercase block">Core Points</span>
+            <span id="kpi-core-points" class="font-serif text-2xl font-bold text-emerald-400">28</span>
+          </div>
+
+          <div class="archaeo-glass p-4 rounded-xl border border-stone-800">
+            <span class="text-[10px] font-mono text-stone-400 uppercase block">Border Points</span>
+            <span id="kpi-border-points" class="font-serif text-2xl font-bold text-gold">6</span>
+          </div>
+
+          <div class="archaeo-glass p-4 rounded-xl border border-stone-800">
+            <span class="text-[10px] font-mono text-stone-400 uppercase block">Noise / Isolated</span>
+            <span id="kpi-noise-points" class="font-serif text-2xl font-bold text-rose-400">2</span>
+          </div>
+
+          <div class="archaeo-glass p-4 rounded-xl border border-stone-800 col-span-2 sm:col-span-1">
+            <span class="text-[10px] font-mono text-stone-400 uppercase block">Avg Cluster Size</span>
+            <span id="kpi-avg-cluster-size" class="font-serif text-2xl font-bold text-sandstone-100">6.8 items</span>
+          </div>
+        </div>
+
+        <!-- Visual Charts A, B, C -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Chart A: Cluster Distribution -->
+          <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-between">
+            <div class="mb-3">
+              <h4 class="font-serif text-sm font-bold text-sandstone-100">A. Cluster Distribution</h4>
+              <p class="text-[11px] text-stone-400">Observation frequency per cluster</p>
+            </div>
+            <div class="h-64 relative">
+              <canvas id="chart-spatial-cluster-dist"></canvas>
+            </div>
+          </div>
+
+          <!-- Chart B: Spatial Distribution Scatter -->
+          <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-between">
+            <div class="mb-3">
+              <h4 class="font-serif text-sm font-bold text-sandstone-100">B. Spatial Distribution (2D)</h4>
+              <p class="text-[11px] text-stone-400">Latitude vs Longitude colored by cluster</p>
+            </div>
+            <div class="h-64 relative">
+              <canvas id="chart-spatial-scatter"></canvas>
+            </div>
+          </div>
+
+          <!-- Chart C: Depth vs Spatial Distribution -->
+          <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-between">
+            <div class="mb-3">
+              <h4 class="font-serif text-sm font-bold text-sandstone-100">C. Depth vs Spatial Distribution</h4>
+              <p class="text-[11px] text-stone-400">Stratigraphic depth vs cluster cluster group</p>
+            </div>
+            <div class="h-64 relative">
+              <canvas id="chart-depth-spatial-scatter"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- D. Cluster Summary Table -->
+        <div class="bg-charcoal-800 rounded-2xl border border-stone-800 overflow-hidden shadow-xl">
+          <div class="p-5 border-b border-stone-800 flex items-center justify-between">
+            <div>
+              <h4 class="font-serif text-base font-bold text-sandstone-100">D. Cluster Summary Table</h4>
+              <p class="text-xs text-stone-400">Quantitative centroid and typological profile for each spatial cluster</p>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-stone-800 text-left text-xs text-stone-300">
+              <thead class="bg-charcoal-900/90 font-serif text-sandstone-200 text-[11px] uppercase tracking-wider">
+                <tr>
+                  <th scope="col" class="px-4 py-3.5">Cluster ID</th>
+                  <th scope="col" class="px-4 py-3.5">Artifacts</th>
+                  <th scope="col" class="px-4 py-3.5">Centroid Latitude</th>
+                  <th scope="col" class="px-4 py-3.5">Centroid Longitude</th>
+                  <th scope="col" class="px-4 py-3.5">Average Depth</th>
+                  <th scope="col" class="px-4 py-3.5">Primary Artifact Type</th>
+                </tr>
+              </thead>
+              <tbody id="cluster-summary-tbody" class="divide-y divide-stone-800/60 font-sans"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==============================================================
+           SECTION 6: ANALYTICS PAGE
+           ============================================================== -->
+      <section id="view-analytics" class="app-view p-6 lg:p-10 space-y-8 hidden">
+        
+        <!-- Header -->
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-gold/15 text-gold text-xs font-mono uppercase font-semibold mb-1">
+            <i class="fas fa-chart-pie"></i> Statistical Aggregations
+          </div>
+          <h2 class="font-serif text-3xl font-extrabold text-sandstone-100">Analytics & Chronology</h2>
+          <p class="text-xs text-stone-400 mt-1">
+            Typological, material, and stratigraphic trend analysis generated dynamically from survey field data.
+          </p>
+        </div>
+
+        <!-- Dynamic Academic Insights Cards (as required in prompt) -->
+        <div class="space-y-2">
+          <h3 class="font-serif text-sm font-bold text-gold uppercase tracking-wider">Automated Academic Insights</h3>
+          <div id="dynamic-academic-insights"></div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          <!-- Stratigraphic Depth Analysis -->
+          <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-gold"></span>
+                <h4 class="font-serif text-sm font-bold text-sandstone-100">Stratigraphic Depth Histogram</h4>
+              </div>
+              <span class="text-[10px] font-mono text-stone-400">Vertical Deposition</span>
+            </div>
+            <div class="h-64 relative">
+              <canvas id="chart-analytics-depth"></canvas>
+            </div>
+            <p class="text-[11px] text-stone-400 mt-3 pt-2 border-t border-stone-800/60 italic text-center">
+              Observation frequencies across vertical depth horizons (0.5m increments)
+            </p>
+          </div>
+
+          <!-- Material Analysis -->
+          <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-stone-400"></span>
+                <h4 class="font-serif text-sm font-bold text-sandstone-100">Material Analysis</h4>
+              </div>
+              <span class="text-[10px] font-mono text-stone-400">Constituent Matrix</span>
+            </div>
+            <div class="h-64 relative">
+              <canvas id="chart-analytics-material"></canvas>
+            </div>
+            <p class="text-[11px] text-stone-400 mt-3 pt-2 border-t border-stone-800/60 italic text-center">
+              Volume breakdown across ceramic, metallic, lithic, and organic media
+            </p>
+          </div>
+
+          <!-- Chronological Period Analysis -->
+          <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+                <h4 class="font-serif text-sm font-bold text-sandstone-100">Chronological Period Breakdown</h4>
+              </div>
+              <span class="text-[10px] font-mono text-stone-400">Epoch Representation</span>
+            </div>
+            <div class="h-64 relative">
+              <canvas id="chart-analytics-period"></canvas>
+            </div>
+            <p class="text-[11px] text-stone-400 mt-3 pt-2 border-t border-stone-800/60 italic text-center">
+              Proportional distribution from Prehistoric through Colonial horizons
+            </p>
+          </div>
+
+          <!-- Site Density Comparison -->
+          <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-terracotta"></span>
+                <h4 class="font-serif text-sm font-bold text-sandstone-100">Site Observation Density</h4>
+              </div>
+              <span class="text-[10px] font-mono text-stone-400">Cross-Sector Survey Trend</span>
+            </div>
+            <div class="h-64 relative">
+              <canvas id="chart-analytics-site"></canvas>
+            </div>
+            <p class="text-[11px] text-stone-400 mt-3 pt-2 border-t border-stone-800/60 italic text-center">
+              Comparative density gradient across Site A through Site E
+            </p>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ==============================================================
+           SECTION 7: EXPORT DATA PAGE
+           ============================================================== -->
+      <section id="view-export-data" class="app-view p-6 lg:p-10 space-y-8 hidden">
+        
+        <!-- Header -->
+        <div class="max-w-3xl">
+          <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-terracotta/15 text-terracotta text-xs font-mono uppercase font-semibold mb-1">
+            <i class="fas fa-file-export"></i> Interoperability & GIS Data Exchange
+          </div>
+          <h2 class="font-serif text-3xl font-extrabold text-sandstone-100">Export Archaeological Records</h2>
+          <p class="text-xs text-stone-300 mt-1 leading-relaxed">
+            Download verified field datasets in open formats compatible with QGIS, ArcGIS, Microsoft Excel, R, Python, and institutional research repositories.
+          </p>
+        </div>
+
+        <!-- 4 Format Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          
+          <!-- Card 1: CSV -->
+          <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 hover:border-terracotta/50 transition-all shadow-xl flex flex-col justify-between group">
+            <div class="space-y-3">
+              <div class="w-12 h-12 rounded-xl bg-terracotta/15 text-terracotta flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                <i class="fas fa-file-csv"></i>
+              </div>
+              <h3 class="font-serif text-lg font-bold text-sandstone-100">CSV Spreadsheet</h3>
+              <p class="text-xs text-stone-400 leading-relaxed">
+                Comma-separated values with UTF-8 BOM encoding. Includes all geographic coordinates, depths, and field descriptions.
+              </p>
+            </div>
+            <button onclick="dataExport.exportCSV(db.getAll())" class="mt-6 w-full py-2.5 px-4 rounded-xl bg-charcoal-700 hover:bg-terracotta text-stone-200 hover:text-white text-xs font-bold transition-colors flex items-center justify-center gap-2 shadow">
+              <i class="fas fa-download"></i>
+              <span>Download CSV</span>
+            </button>
+          </div>
+
+          <!-- Card 2: JSON -->
+          <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 hover:border-gold/50 transition-all shadow-xl flex flex-col justify-between group">
+            <div class="space-y-3">
+              <div class="w-12 h-12 rounded-xl bg-gold/15 text-gold flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                <i class="fas fa-file-code"></i>
+              </div>
+              <h3 class="font-serif text-lg font-bold text-sandstone-100">JSON Archive</h3>
+              <p class="text-xs text-stone-400 leading-relaxed">
+                Structured archaeological JSON object tree. Ideal for web APIs, Python pandas, database migrations, and REST endpoints.
+              </p>
+            </div>
+            <button onclick="dataExport.exportJSON(db.getAll())" class="mt-6 w-full py-2.5 px-4 rounded-xl bg-charcoal-700 hover:bg-gold hover:text-charcoal-900 text-stone-200 text-xs font-bold transition-colors flex items-center justify-center gap-2 shadow">
+              <i class="fas fa-download"></i>
+              <span>Download JSON</span>
+            </button>
+          </div>
+
+          <!-- Card 3: GeoJSON (QGIS / ArcGIS) -->
+          <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 hover:border-blue-500/50 transition-all shadow-xl flex flex-col justify-between group">
+            <div class="space-y-3">
+              <div class="w-12 h-12 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                <i class="fas fa-map-location"></i>
+              </div>
+              <h3 class="font-serif text-lg font-bold text-sandstone-100">GeoJSON (RFC 7946)</h3>
+              <p class="text-xs text-stone-400 leading-relaxed">
+                Standard spatial FeatureCollection with WGS84 point coordinates for direct import into QGIS, ArcGIS, Mapbox, and GRASS GIS.
+              </p>
+            </div>
+            <button onclick="dataExport.exportGeoJSON(db.getAll())" class="mt-6 w-full py-2.5 px-4 rounded-xl bg-charcoal-700 hover:bg-blue-600 text-stone-200 hover:text-white text-xs font-bold transition-colors flex items-center justify-center gap-2 shadow">
+              <i class="fas fa-download"></i>
+              <span>Download GeoJSON</span>
+            </button>
+          </div>
+
+          <!-- Card 4: Excel (XLS) -->
+          <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 hover:border-emerald-500/50 transition-all shadow-xl flex flex-col justify-between group">
+            <div class="space-y-3">
+              <div class="w-12 h-12 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                <i class="fas fa-file-excel"></i>
+              </div>
+              <h3 class="font-serif text-lg font-bold text-sandstone-100">Microsoft Excel</h3>
+              <p class="text-xs text-stone-400 leading-relaxed">
+                Native XML Spreadsheet format openable in Microsoft Excel, LibreOffice Calc, or Google Sheets with formatted headers.
+              </p>
+            </div>
+            <button onclick="dataExport.exportExcel(db.getAll())" class="mt-6 w-full py-2.5 px-4 rounded-xl bg-charcoal-700 hover:bg-emerald-600 text-stone-200 hover:text-white text-xs font-bold transition-colors flex items-center justify-center gap-2 shadow">
+              <i class="fas fa-download"></i>
+              <span>Download Excel</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Export Filtered Records Option -->
+        <div class="p-6 rounded-2xl bg-charcoal-800 border border-stone-800 max-w-2xl space-y-3">
+          <h4 class="font-serif text-sm font-bold text-sandstone-100">Filtered Records Export</h4>
+          <p class="text-xs text-stone-400 leading-relaxed">
+            Need to export only a subset of data (such as Site A discoveries, or Bronze artifacts)? Navigate to the <a href="#repository" onclick="app.navigateTo('repository')" class="text-gold underline">Artifact Repository</a>, apply your filters, and use the export buttons above to extract your target sub-assemblage.
+          </p>
+          <div class="text-[11px] font-mono text-sandstone-300">
+            Total Records Available for Export: <span id="export-total-count" class="text-gold font-bold">36</span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==============================================================
+           SECTION 8: ABOUT ARCHAEMAP PAGE
+           ============================================================== -->
+      <section id="view-about" class="app-view p-6 lg:p-10 space-y-10 hidden">
+        
+        <!-- Mission & Purpose -->
+        <div class="max-w-4xl space-y-4">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-terracotta/15 text-terracotta text-xs font-mono uppercase font-semibold">
+            <i class="fas fa-shield-halved"></i> Digital Archaeological Infrastructure
+          </div>
+          <h2 class="font-serif text-4xl font-extrabold text-sandstone-100">About ArchaeoMap</h2>
+          <p class="text-base text-stone-300 leading-relaxed">
+            ArchaeoMap is a GIS-based digital archaeological field survey and spatial analysis system designed to bring artifact documentation, geographic visualization and preliminary spatial analysis into a unified digital environment.
+          </p>
+        </div>
+
+        <!-- Why ArchaeoMap Section (as required in prompt) -->
+        <div class="p-8 rounded-3xl bg-charcoal-800 border border-stone-800 max-w-4xl space-y-4 shadow-xl">
+          <div class="flex items-center gap-3 text-gold">
+            <i class="fas fa-lightbulb text-xl"></i>
+            <h3 class="font-serif text-xl font-bold text-sandstone-100">Why ArchaeoMap?</h3>
+          </div>
+          <p class="text-sm text-stone-300 leading-relaxed">
+            Archaeological field data can become difficult to manage when information, photographs and geographic locations are maintained separately in disconnected field notebooks, paper context sheets, and standalone spreadsheets.
+          </p>
+          <p class="text-sm text-stone-300 leading-relaxed">
+            ArchaeoMap connects these components into one cohesive system: tying artifact typologies and photographic evidence directly to geographic coordinates, stratigraphic horizons, and automated spatial clustering.
+          </p>
+        </div>
+
+        <!-- 7 Feature Cards Grid (as required in prompt) -->
+        <div class="space-y-4 max-w-4xl">
+          <h3 class="font-serif text-lg font-bold text-sandstone-100">Platform Core Capabilities</h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            
+            <div class="bg-charcoal-800/80 p-5 rounded-2xl border border-stone-800 space-y-2">
+              <div class="text-2xl">🏺</div>
+              <h4 class="font-serif font-bold text-sandstone-100 text-sm">Digital Artifact Recording</h4>
+              <p class="text-xs text-stone-400">Standardized field forms capturing taxonomy, stratigraphy, trench context, and depth.</p>
+            </div>
+
+            <div class="bg-charcoal-800/80 p-5 rounded-2xl border border-stone-800 space-y-2">
+              <div class="text-2xl">📍</div>
+              <h4 class="font-serif font-bold text-sandstone-100 text-sm">Geographic Mapping</h4>
+              <p class="text-xs text-stone-400">High-resolution multi-layer GIS cartography with satellite, topographic, and street tiles.</p>
+            </div>
+
+            <div class="bg-charcoal-800/80 p-5 rounded-2xl border border-stone-800 space-y-2">
+              <div class="text-2xl">📸</div>
+              <h4 class="font-serif font-bold text-sandstone-100 text-sm">Photographic Documentation</h4>
+              <p class="text-xs text-stone-400">Visual specimen record with drag-and-drop file ingestion and museum-grade presentation.</p>
+            </div>
+
+            <div class="bg-charcoal-800/80 p-5 rounded-2xl border border-stone-800 space-y-2">
+              <div class="text-2xl">🔥</div>
+              <h4 class="font-serif font-bold text-sandstone-100 text-sm">Density Heatmaps</h4>
+              <p class="text-xs text-stone-400">Kernel coordinate concentration visualization identifying artifact observation intensities.</p>
+            </div>
+
+            <div class="bg-charcoal-800/80 p-5 rounded-2xl border border-stone-800 space-y-2">
+              <div class="text-2xl">🧠</div>
+              <h4 class="font-serif font-bold text-sandstone-100 text-sm">Spatial Clustering</h4>
+              <p class="text-xs text-stone-400">True DBSCAN algorithm using Haversine distance to demarcate spatial groupings and convex hulls.</p>
+            </div>
+
+            <div class="bg-charcoal-800/80 p-5 rounded-2xl border border-stone-800 space-y-2">
+              <div class="text-2xl">📊</div>
+              <h4 class="font-serif font-bold text-sandstone-100 text-sm">Data Analytics</h4>
+              <p class="text-xs text-stone-400">Dynamic charts for period chronology, material cultures, and vertical stratigraphy.</p>
+            </div>
+
+            <div class="bg-charcoal-800/80 p-5 rounded-2xl border border-stone-800 space-y-2 md:col-span-2 lg:col-span-3">
+              <div class="text-2xl">📥</div>
+              <h4 class="font-serif font-bold text-sandstone-100 text-sm">Open Data Export</h4>
+              <p class="text-xs text-stone-400">Direct export in CSV, JSON, GeoJSON (QGIS/ArcGIS ready), and Excel XML formats.</p>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==============================================================
+           GLOBAL FOOTER (as required in prompt)
+           ============================================================== -->
+      <footer class="mt-auto border-t border-stone-800 bg-charcoal-850 px-8 py-8 text-xs text-stone-400 font-sans">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="space-y-1 text-center md:text-left">
+            <div class="flex items-center justify-center md:justify-start gap-2 font-serif font-bold text-sandstone-100 text-sm">
+              <span>🏺</span>
+              <span>ArchaeoMap</span>
+            </div>
+            <p class="text-[11px] text-stone-400">
+              GIS-Based Digital Archaeological Field Survey & Spatial Analysis System
+            </p>
+            <p class="text-[11px] text-gold italic font-serif">
+              “Mapping the past. Understanding the patterns.”
+            </p>
+          </div>
+          <div class="text-center md:text-right space-y-1">
+            <span class="font-mono text-stone-400 text-[11px]">&copy; 2026 ArchaeoMap. All rights reserved.</span>
+            <p class="text-[10px] text-stone-400">Designed for academic research, digital humanities, and archaeological field surveys.</p>
+          </div>
+        </div>
+      </footer>
+
+    </main>
+
+  </div>
+
+  <!-- ================================================================
+       MODAL: ARTIFACT DETAIL VIEW (FULL SPECIMEN RECORD)
+       ================================================================ -->
+  <div id="artifact-detail-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto hidden">
+    <div class="bg-charcoal-850 border border-stone-700/80 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
+      
+      <!-- Close Button -->
+      <button onclick="app.closeDetailModal()" class="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-charcoal-800/80 hover:bg-stone-700 text-stone-300 hover:text-white flex items-center justify-center transition-colors">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div class="grid grid-cols-1 md:grid-cols-2">
+        
+        <!-- Left: Large High-Resolution Specimen Photograph -->
+        <div class="relative bg-stone-900 min-h-[320px] md:min-h-full">
+          <img id="detail-modal-image" src="" alt="Artifact Specimen" class="w-full h-full object-cover" />
+          <div class="absolute inset-0 bg-gradient-to-t from-charcoal-900/90 via-transparent to-transparent"></div>
+          <div class="absolute top-4 left-4">
+            <span id="detail-modal-type" class="px-3 py-1 rounded-lg text-xs font-semibold uppercase text-white shadow-lg"></span>
+          </div>
+          <div class="absolute bottom-4 left-4 right-4">
+            <span id="detail-modal-id" class="text-xs font-mono px-2 py-0.5 rounded bg-charcoal-900/90 text-gold border border-stone-700"></span>
+          </div>
+        </div>
+
+        <!-- Right: Metadata & Taxonomic Details -->
+        <div class="p-6 md:p-8 space-y-6">
+          <div>
+            <h3 id="detail-modal-name" class="font-serif text-2xl font-bold text-sandstone-100"></h3>
+            <p class="text-xs text-stone-400 mt-1">Archaeological Field Record</p>
+          </div>
+
+          <!-- Metadata Grid -->
+          <div class="grid grid-cols-2 gap-3 text-xs bg-charcoal-800/70 p-4 rounded-xl border border-stone-800">
+            <div>
+              <span class="text-stone-400 block text-[10px] uppercase font-mono">Material</span>
+              <span id="detail-modal-material" class="text-sandstone-200 font-medium"></span>
+            </div>
+            <div>
+              <span class="text-stone-400 block text-[10px] uppercase font-mono">Historical Period</span>
+              <span id="detail-modal-period" class="text-sandstone-200 font-medium"></span>
+            </div>
+            <div>
+              <span class="text-stone-400 block text-[10px] uppercase font-mono">Survey Site</span>
+              <span id="detail-modal-site" class="text-terracotta font-medium"></span>
+            </div>
+            <div>
+              <span class="text-stone-400 block text-[10px] uppercase font-mono">Excavation Area</span>
+              <span id="detail-modal-trench" class="text-sandstone-200 font-medium"></span>
+            </div>
+            <div>
+              <span class="text-stone-400 block text-[10px] uppercase font-mono">Stratigraphic Layer</span>
+              <span id="detail-modal-layer" class="text-sandstone-200 font-medium"></span>
+            </div>
+            <div>
+              <span class="text-stone-400 block text-[10px] uppercase font-mono">Recorded Depth</span>
+              <span id="detail-modal-depth" class="text-gold font-mono font-bold"></span>
+            </div>
+            <div class="col-span-2 pt-1 border-t border-stone-700/40">
+              <span class="text-stone-400 block text-[10px] uppercase font-mono">Geographic Coordinates (WGS84)</span>
+              <span id="detail-modal-coords" class="text-stone-200 font-mono text-xs"></span>
+            </div>
+          </div>
+
+          <!-- Field Description -->
+          <div class="space-y-1.5">
+            <h4 class="font-serif text-xs font-bold text-gold uppercase tracking-wider">Field Description</h4>
+            <p id="detail-modal-description" class="text-xs text-stone-300 leading-relaxed italic bg-charcoal-900/50 p-3.5 rounded-xl border border-stone-800"></p>
+            <div class="text-[10px] text-stone-400 pt-1">
+              Field Registrar: <span id="detail-modal-recorded-by" class="text-stone-300"></span>
+            </div>
+          </div>
+
+          <!-- Spatial Context Mini-Map -->
+          <div class="space-y-1.5">
+            <h4 class="font-serif text-xs font-bold text-gold uppercase tracking-wider">Spatial Context (Survey Sector)</h4>
+            <div id="detail-mini-map" class="h-44 w-full rounded-xl overflow-hidden border border-stone-700 shadow-inner"></div>
+          </div>
+
+          <!-- Actions -->
+          <div class="pt-2 flex items-center gap-3">
+            <button onclick="dataExport.exportJSON([db.getById(app.selectedArtifactId)], `${app.selectedArtifactId}.json`)" class="flex-1 py-2 px-3 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-stone-300 hover:text-white border border-stone-700 text-xs font-medium transition-colors flex items-center justify-center gap-1.5">
+              <i class="fas fa-file-export"></i>
+              <span>Export Record (JSON)</span>
+            </button>
+            <button onclick="app.closeDetailModal(); app.locateOnGIS(app.selectedArtifactId);" class="flex-1 py-2 px-3 rounded-xl bg-terracotta hover:bg-terracotta-hover text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-lg">
+              <i class="fas fa-map-location-dot"></i>
+              <span>Locate on GIS Map</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Application Logic Modules -->
+  <script src="js/data.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/spatial.js"></script>
+  <script src="js/gis.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
