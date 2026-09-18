@@ -1,7 +1,7 @@
 /**
  * ARCHAEOMap - GIS Explorer & Interactive Mapping Engine
- * Built on Leaflet.js with multi-layer raster tiles, custom archaeological SVG markers,
- * density heatmap, DBSCAN cluster boundary polygons, and coordinate HUD.
+ * Enhanced with Chronological Time-Travel Scrubber, Antique Sepia Cartography filter,
+ * Astrolabe/Compass Rose HUD, and dynamic cluster polygons.
  */
 
 class ArchaeologicalGIS {
@@ -25,8 +25,11 @@ class ArchaeologicalGIS {
       site: "All",
       showMarkers: true,
       showHeatmap: false,
-      showClusters: true
+      showClusters: true,
+      sepiaMode: false
     };
+
+    this.currentTimelinePeriod = "All";
   }
 
   /**
@@ -36,13 +39,11 @@ class ArchaeologicalGIS {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    // If map already exists, invalidate size and return
     if (this.map) {
       setTimeout(() => this.map.invalidateSize(), 200);
       return;
     }
 
-    // Default center on archaeological survey site area (Sisupalgarh / Kalinga Survey Sector)
     const defaultCenter = [20.2965, 85.8255];
     const defaultZoom = 15;
 
@@ -53,46 +54,35 @@ class ArchaeologicalGIS {
       attributionControl: false
     });
 
-    // Custom Zoom control at top-left
     L.control.zoom({ position: "topleft" }).addTo(this.map);
-
-    // Scale control at bottom-left
     L.control.scale({ imperial: false, metric: true, position: "bottomleft" }).addTo(this.map);
-
-    // Attribution control at bottom-right
     L.control.attribution({ position: "bottomright", prefix: '<span class="text-xs text-stone-400">ARCHAEOMap GIS Engine</span>' }).addTo(this.map);
 
-    // 1. Street Map / CartoDB Positron (Clean, modern archaeological field cartography)
+    // 1. Street Map / CartoDB Voyager
     this.baseLayers.street = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
       maxZoom: 19,
-      subdomains: "abcd",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
+      subdomains: "abcd"
     });
 
-    // 2. Topographic Map / OpenTopoMap (Contours, elevation, terrain relief)
+    // 2. Topographic Map / OpenTopoMap
     this.baseLayers.topo = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
       maxZoom: 17,
-      subdomains: "abc",
-      attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
+      subdomains: "abc"
     });
 
-    // 3. Satellite Imagery / Esri World Imagery (High-res orbital photograph)
+    // 3. Satellite Imagery / Esri World Imagery
     this.baseLayers.satellite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-      maxZoom: 19,
-      attribution: "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
+      maxZoom: 19
     });
 
-    // 4. Dark Matter / Antique Dark Cartography
+    // 4. Dark Matter
     this.baseLayers.dark = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
       maxZoom: 19,
-      subdomains: "abcd",
-      attribution: '&copy; CARTO'
+      subdomains: "abcd"
     });
 
-    // Set default base layer
     this.baseLayers.street.addTo(this.map);
 
-    // Initialize layer groups
     this.clusterLayerGroup = L.layerGroup().addTo(this.map);
     this.heatLayerGroup = L.layerGroup().addTo(this.map);
     this.markerLayerGroup = L.layerGroup().addTo(this.map);
@@ -114,10 +104,8 @@ class ArchaeologicalGIS {
       }
     });
 
-    // Initial render of data
     this.renderGISData();
 
-    // Fit survey bounds smoothly
     setTimeout(() => {
       this.fitSurveyBounds();
     }, 400);
@@ -133,7 +121,6 @@ class ArchaeologicalGIS {
     this.baseLayers[layerName].addTo(this.map);
     this.currentBaseLayerName = layerName;
 
-    // Update active button styling in GIS UI
     const layerButtons = document.querySelectorAll(".gis-layer-btn");
     layerButtons.forEach(btn => {
       if (btn.dataset.layer === layerName) {
@@ -147,16 +134,66 @@ class ArchaeologicalGIS {
   }
 
   /**
-   * Generates a custom archaeological SVG pin marker based on artifact type
+   * Toggle Antique Sepia Cartographic Filter over map tiles
+   */
+  toggleSepiaMode() {
+    this.activeFilters.sepiaMode = !this.activeFilters.sepiaMode;
+    const mapEl = document.getElementById("gis-map");
+    const sepiaBtn = document.getElementById("gis-btn-sepia");
+
+    if (mapEl) {
+      if (this.activeFilters.sepiaMode) {
+        mapEl.classList.add("sepia-carto-layer");
+        if (sepiaBtn) {
+          sepiaBtn.classList.add("bg-gold", "text-charcoal-900");
+          sepiaBtn.classList.remove("bg-charcoal-700", "text-stone-300");
+        }
+        app.showToast("Antique Cartography Filter Active", "Vintage sepia cartographic filter applied to GIS tiles.", "info");
+      } else {
+        mapEl.classList.remove("sepia-carto-layer");
+        if (sepiaBtn) {
+          sepiaBtn.classList.remove("bg-gold", "text-charcoal-900");
+          sepiaBtn.classList.add("bg-charcoal-700", "text-stone-300");
+        }
+      }
+    }
+  }
+
+  /**
+   * Chronological Timeline Scrubber filter handler
+   */
+  setTimelinePeriod(period) {
+    this.currentTimelinePeriod = period;
+    this.activeFilters.period = period;
+
+    // Update buttons in the timeline bar
+    document.querySelectorAll(".timeline-era-btn").forEach(btn => {
+      if (btn.dataset.era === period) {
+        btn.classList.add("bg-gold", "text-charcoal-900", "font-bold", "shadow-md");
+        btn.classList.remove("text-stone-400", "hover:text-stone-200");
+      } else {
+        btn.classList.remove("bg-gold", "text-charcoal-900", "font-bold", "shadow-md");
+        btn.classList.add("text-stone-400", "hover:text-stone-200");
+      }
+    });
+
+    // Sync floating panel dropdown
+    const filterPeriodSelect = document.getElementById("gis-filter-period");
+    if (filterPeriodSelect) filterPeriodSelect.value = period;
+
+    this.renderGISData();
+  }
+
+  /**
+   * Generates custom archaeological SVG pin marker
    */
   createCustomMarkerIcon(artifact) {
     const config = TYPE_CONFIG[artifact.type] || TYPE_CONFIG["Other"];
     const color = config.color;
 
-    // SVG Pin with circular head and needle pointer
     const svgIconHtml = `
       <div class="archaeo-pin-wrapper group" data-artifact-id="${artifact.id}">
-        <svg width="34" height="44" viewBox="0 0 34 44" fill="none" xmlns="http://www.w3.org/2000/svg" class="filter drop-shadow-md transition-transform duration-300 group-hover:scale-125 group-hover:-translate-y-1">
+        <svg width="34" height="44" viewBox="0 0 34 44" fill="none" xmlns="http://www.w3.org/2000/svg" class="filter drop-shadow-lg transition-transform duration-300 group-hover:scale-125 group-hover:-translate-y-1">
           <path d="M17 0C7.61116 0 0 7.61116 0 17C0 27.5 14.5 42.5 16.2 43.6C16.68 43.95 17.32 43.95 17.8 43.6C19.5 42.5 34 27.5 34 17C34 7.61116 26.3888 0 17 0Z" fill="${color}"/>
           <circle cx="17" cy="17" r="13" fill="#181D26" stroke="#FFFFFF" stroke-width="1.5" stroke-opacity="0.5"/>
           <circle cx="17" cy="17" r="9" fill="${color}" fill-opacity="0.3"/>
@@ -181,7 +218,6 @@ class ArchaeologicalGIS {
    */
   buildPopupContent(artifact) {
     const typeCfg = TYPE_CONFIG[artifact.type] || TYPE_CONFIG["Other"];
-    const periodCfg = PERIOD_CONFIG[artifact.period] || { color: "#C85A32" };
 
     return `
       <div class="archaeo-popup-card w-72 bg-charcoal-800 text-stone-100 rounded-xl overflow-hidden shadow-2xl border border-stone-700/60 font-sans">
@@ -240,17 +276,15 @@ class ArchaeologicalGIS {
   }
 
   /**
-   * Renders all GIS layers (Markers, DBSCAN Convex Hulls, Heatmap) according to filters
+   * Renders all GIS layers
    */
   renderGISData() {
     if (!this.map) return;
 
-    // Clear existing dynamic layers
     this.markerLayerGroup.clearLayers();
     this.clusterLayerGroup.clearLayers();
     this.heatLayerGroup.clearLayers();
 
-    // 1. Get filtered artifacts based on GIS control panel settings
     const filteredArtifacts = db.filter({
       type: this.activeFilters.type,
       material: this.activeFilters.material,
@@ -258,7 +292,6 @@ class ArchaeologicalGIS {
       site: this.activeFilters.site
     });
 
-    // Update active artifact counter badge in GIS control panel
     const countBadge = document.getElementById("gis-filtered-count");
     if (countBadge) {
       countBadge.innerText = `${filteredArtifacts.length} Discoveries Visible`;
@@ -266,7 +299,7 @@ class ArchaeologicalGIS {
 
     if (filteredArtifacts.length === 0) return;
 
-    // 2. Render Markers if toggled
+    // 1. Markers
     if (this.activeFilters.showMarkers) {
       filteredArtifacts.forEach(artifact => {
         const icon = this.createCustomMarkerIcon(artifact);
@@ -282,13 +315,12 @@ class ArchaeologicalGIS {
       });
     }
 
-    // 3. Run DBSCAN and Render Cluster Boundaries if toggled
+    // 2. Clusters
     const spatialResult = spatialEngine.runDBSCAN(filteredArtifacts);
 
     if (this.activeFilters.showClusters && spatialResult.clusters.length > 0) {
       spatialResult.clusters.forEach(cluster => {
         if (cluster.hull && cluster.hull.length >= 3) {
-          // Polygon Convex Hull
           const polygon = L.polygon(cluster.hull, {
             color: cluster.color,
             weight: 2,
@@ -298,7 +330,6 @@ class ArchaeologicalGIS {
             dashArray: "4, 6"
           });
 
-          // Cluster info popup
           polygon.bindPopup(`
             <div class="p-3 bg-charcoal-800 text-stone-100 rounded-lg text-xs font-sans space-y-1.5 min-w-[200px]">
               <div class="flex items-center justify-between border-b border-stone-700 pb-1">
@@ -308,13 +339,12 @@ class ArchaeologicalGIS {
               <div><span class="text-stone-400">Dominant Site:</span> <span class="text-white font-medium">${cluster.dominantSite}</span></div>
               <div><span class="text-stone-400">Primary Type:</span> <span class="text-white font-medium">${cluster.primaryType}</span></div>
               <div><span class="text-stone-400">Avg Depth:</span> <span class="text-gold font-mono">${cluster.avgDepth} m</span></div>
-              <p class="text-[10px] text-stone-400 pt-1 italic">DBSCAN spatial concentration boundary (hull)</p>
+              <p class="text-[10px] text-stone-400 pt-1 italic">DBSCAN spatial concentration boundary</p>
             </div>
           `);
 
           this.clusterLayerGroup.addLayer(polygon);
 
-          // Centroid Badge Pin
           const centroidIcon = L.divIcon({
             className: "cluster-centroid-badge",
             html: `
@@ -332,15 +362,12 @@ class ArchaeologicalGIS {
       });
     }
 
-    // 4. Render Density Heatmap if toggled
+    // 3. Density Heatmap
     if (this.activeFilters.showHeatmap) {
       this.renderDensityHeatmap(filteredArtifacts);
     }
   }
 
-  /**
-   * Generates a smooth density heatmap using Leaflet canvas layer or radial gradient circles
-   */
   renderDensityHeatmap(artifacts) {
     if (typeof L.heatLayer === "function") {
       const heatPoints = artifacts.map(a => [a.latitude, a.longitude, 0.8]);
@@ -352,7 +379,6 @@ class ArchaeologicalGIS {
       });
       this.heatLayerGroup.addLayer(heat);
     } else {
-      // Fallback radial density circles if heatLayer is loading
       artifacts.forEach(a => {
         const circle = L.circle([a.latitude, a.longitude], {
           radius: 120,
@@ -366,9 +392,6 @@ class ArchaeologicalGIS {
     }
   }
 
-  /**
-   * Fit map viewport to encapsulate all recorded survey artifacts
-   */
   fitSurveyBounds() {
     if (!this.map) return;
     const all = db.getAll();
@@ -379,9 +402,6 @@ class ArchaeologicalGIS {
     this.map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
   }
 
-  /**
-   * Center map on specific artifact and open its popup
-   */
   focusArtifact(id) {
     const artifact = db.getById(id);
     if (!artifact || !this.map) return;
@@ -389,10 +409,6 @@ class ArchaeologicalGIS {
     this.map.flyTo([artifact.latitude, artifact.longitude], 17, { duration: 1.2 });
   }
 
-  /**
-   * Interactive mini-map for Add Artifact page
-   * Allows clicking anywhere to adjust artifact coordinates
-   */
   initPickerMap(containerId = "picker-map", initialLat = 20.2961, initialLon = 85.8245) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -433,13 +449,11 @@ class ArchaeologicalGIS {
       draggable: true
     }).addTo(this.pickerMap);
 
-    // Update form on marker drag
     this.pickerMarker.on("dragend", (e) => {
       const pos = e.target.getLatLng();
       this.updatePickerInputs(pos.lat, pos.lng);
     });
 
-    // Update form and marker on map click
     this.pickerMap.on("click", (e) => {
       this.pickerMarker.setLatLng(e.latlng);
       this.updatePickerInputs(e.latlng.lat, e.latlng.lng);
@@ -460,9 +474,6 @@ class ArchaeologicalGIS {
     }
   }
 
-  /**
-   * Renders mini-map for the Artifact Detail Modal
-   */
   renderDetailMiniMap(containerId, lat, lon, artifactName, artifactType) {
     const container = document.getElementById(containerId);
     if (!container) return;

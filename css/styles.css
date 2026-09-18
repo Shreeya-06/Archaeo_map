@@ -1,38 +1,66 @@
 /* ===================================================================
-   ARCHAEOMap - Design System & Custom Archaeological Styling
+   ARCHAEO-BHĀRAT - Archaeological Survey of India & Spatial GIS System
+   Dual Themes: Imperial Sandstone & Obsidian (Museum Dark) & Bhojpatra (Aged Indian Manuscript)
    =================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Cinzel+Decorative:wght@700;900&family=Rozha+One&family=Yatra+One&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 
 :root {
   --font-serif: 'Cinzel', serif;
+  --font-serif-dec: 'Cinzel Decorative', serif;
   --font-sans: 'Plus Jakarta Sans', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+  --font-indic: 'Yatra One', 'Rozha One', cursive, serif;
 
-  --color-charcoal-900: #0D1015;
-  --color-charcoal-800: #141820;
-  --color-charcoal-700: #1C222D;
-  --color-charcoal-600: #262E3D;
+  /* Theme Defaults: Imperial Sandstone & Obsidian (Dark Basalt & Swarna Gold) */
+  --bg-primary: #0A0C10;
+  --bg-sidebar: #0E1218;
+  --bg-surface: #121620;
+  --bg-card: #161C28;
+  --bg-input: #0A0C10;
+  --border-color: rgba(212, 175, 55, 0.14);
+  --border-accent: rgba(212, 175, 55, 0.38);
 
-  --color-sandstone-100: #FAF8F5;
-  --color-sandstone-200: #F4EFE6;
-  --color-sandstone-300: #E5DAC8;
-  --color-sandstone-400: #C2B49F;
+  --text-primary: #FAF6ED;
+  --text-secondary: #E5D9C5;
+  --text-muted: #A39682;
 
   --color-terracotta: #C85A32;
   --color-terracotta-hover: #D96A43;
-  --color-terracotta-glow: rgba(200, 90, 50, 0.25);
+  --color-sandstone-red: #A83820;
+  --color-gold: #D4AF37;
+  --color-gold-hover: #E5C258;
+  --color-bronze: #CD7F32;
+}
 
-  --color-gold: #C6A664;
-  --color-gold-hover: #D8B775;
-  --color-gold-glow: rgba(198, 166, 100, 0.25);
+/* Bhojpatra & Palm-Leaf Manuscript Mode (Aged Indian Bark, Saffron & Sepia Ink) */
+body.theme-papyrus {
+  --bg-primary: #F5ECD9;
+  --bg-sidebar: #EBDDC4;
+  --bg-surface: #EFE4CC;
+  --bg-card: #FAF2E3;
+  --bg-input: #F7EFE0;
+  --border-color: rgba(140, 60, 20, 0.18);
+  --border-accent: rgba(184, 74, 42, 0.38);
+
+  --text-primary: #241A11;
+  --text-secondary: #483320;
+  --text-muted: #7A624A;
+
+  --color-terracotta: #A64522;
+  --color-terracotta-hover: #BF532B;
+  --color-sandstone-red: #8B2C16;
+  --color-gold: #9C7722;
+  --color-gold-hover: #B58C2B;
+  --color-bronze: #8C5523;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-charcoal-900);
-  color: #E2DDD5;
+  background-color: var(--bg-primary);
+  color: var(--text-secondary);
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 h1, h2, h3, .font-serif {
@@ -40,22 +68,111 @@ h1, h2, h3, .font-serif {
   letter-spacing: 0.02em;
 }
 
+.font-serif-dec {
+  font-family: var(--font-serif-dec);
+}
+
+.font-indic {
+  font-family: var(--font-indic);
+}
+
 .font-mono {
   font-family: var(--font-mono);
 }
 
-/* Subtle Cartographic / Parchment Grid Pattern Overlay */
+/* Background Cartographic Coordinate Grid Overlay */
 .bg-carto-grid {
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    linear-gradient(to right, rgba(212, 175, 55, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(212, 175, 55, 0.04) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
-/* Hero archaeological decorative contour lines */
-.hero-archaeo-pattern {
-  background-image: radial-gradient(circle at 50% 50%, rgba(200, 90, 50, 0.08) 0%, transparent 60%),
-                    radial-gradient(circle at 80% 20%, rgba(198, 166, 100, 0.05) 0%, transparent 50%);
+body.theme-papyrus .bg-carto-grid {
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(166, 69, 34, 0.04) 0%, transparent 60%),
+    linear-gradient(to right, rgba(166, 69, 34, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(166, 69, 34, 0.05) 1px, transparent 1px);
+  background-size: 100% 100%, 36px 36px, 36px 36px;
+}
+
+/* Subtle Ashokan Brahmi Script & Sanskrit Motto Watermark */
+.bg-ancient-watermark {
+  position: relative;
+}
+.bg-ancient-watermark::before {
+  content: "𑀥𑀁𑀫 𑀲𑀁𑀖 𑀩𑀼𑀤𑁆𑀥 𑀲𑀺𑀤𑁆𑀥𑀁 · 𑀤𑁂𑀯𑀸𑀦𑀁𑀧𑀺𑀬𑁂𑀦 𑀧𑀺𑀬𑀤𑀲𑀺𑀦 𑀮𑀸𑀚𑀺𑀦 · प्रत्नकीर्तिमपावृणु · ASI 2026";
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-family: var(--font-serif);
+  font-size: 10.5px;
+  letter-spacing: 0.35em;
+  opacity: 0.14;
+  pointer-events: none;
+  text-transform: uppercase;
+}
+
+/* Ornate Antique Indian Corner Brackets */
+.ornate-corner {
+  position: relative;
+}
+.ornate-corner::before, .ornate-corner::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  border-color: var(--color-gold);
+  opacity: 0.65;
+}
+.ornate-corner::before {
+  top: 8px;
+  left: 8px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+}
+.ornate-corner::after {
+  bottom: 8px;
+  right: 8px;
+  border-bottom: 2px solid;
+  border-right: 2px solid;
+}
+
+/* Red Sandstone Gradient Container */
+.bg-sandstone-red {
+  background: linear-gradient(135deg, #7A2814 0%, #A83820 50%, #5E1F10 100%);
+}
+
+/* Theme Adaptations for Bhojpatra / Papyrus Mode */
+body.theme-papyrus #main-sidebar {
+  background-color: var(--bg-sidebar) !important;
+  border-right-color: var(--border-color) !important;
+}
+body.theme-papyrus .bg-charcoal-900 { background-color: var(--bg-primary) !important; }
+body.theme-papyrus .bg-charcoal-850 { background-color: var(--bg-sidebar) !important; }
+body.theme-papyrus .bg-charcoal-800 { background-color: var(--bg-surface) !important; }
+body.theme-papyrus .bg-charcoal-750 { background-color: var(--bg-card) !important; }
+body.theme-papyrus .bg-charcoal-700 { background-color: #E2D3B8 !important; color: #241A11 !important; }
+
+body.theme-papyrus .text-sandstone-100,
+body.theme-papyrus .text-sandstone-200 { color: #241A11 !important; }
+body.theme-papyrus .text-stone-300,
+body.theme-papyrus .text-stone-200 { color: #483320 !important; }
+body.theme-papyrus .text-stone-400 { color: #7A624A !important; }
+body.theme-papyrus .border-stone-800,
+body.theme-papyrus .border-stone-700 { border-color: var(--border-color) !important; }
+body.theme-papyrus input,
+body.theme-papyrus select,
+body.theme-papyrus textarea {
+  background-color: var(--bg-input) !important;
+  color: #241A11 !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Antique Map Sepia Filter */
+.sepia-carto-layer {
+  filter: sepia(0.38) contrast(1.08) brightness(0.92);
 }
 
 /* Custom Scrollbars */
@@ -64,10 +181,10 @@ h1, h2, h3, .font-serif {
   height: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: #0D1015;
+  background: var(--bg-primary);
 }
 ::-webkit-scrollbar-thumb {
-  background: #2D3748;
+  background: var(--border-accent);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -76,16 +193,14 @@ h1, h2, h3, .font-serif {
 
 /* Glassmorphic Cards */
 .archaeo-glass {
-  background: rgba(20, 24, 32, 0.85);
+  background: rgba(18, 22, 32, 0.88);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--border-color);
 }
-
-.archaeo-glass-gold {
-  background: rgba(24, 29, 39, 0.9);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(198, 166, 100, 0.2);
+body.theme-papyrus .archaeo-glass {
+  background: rgba(245, 236, 220, 0.9);
+  border-color: rgba(140, 60, 20, 0.22);
 }
 
 /* Leaflet Custom Popup Styling */
@@ -95,88 +210,185 @@ h1, h2, h3, .font-serif {
   padding: 0 !important;
   border-radius: 14px;
 }
-
 .custom-leaflet-popup .leaflet-popup-content {
   margin: 0 !important;
   line-height: normal !important;
 }
-
 .custom-leaflet-popup .leaflet-popup-tip {
-  background: #141820 !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #121620 !important;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+body.theme-papyrus .custom-leaflet-popup .leaflet-popup-tip {
+  background: #EFE4CC !important;
+  border-color: rgba(140, 60, 20, 0.35) !important;
 }
 
 /* Leaflet Zoom & Controls */
 .leaflet-control-zoom {
   border: none !important;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
 }
 .leaflet-control-zoom a {
-  background-color: #181D26 !important;
-  color: #D9CAB3 !important;
-  border-color: #2E3848 !important;
+  background-color: var(--bg-surface) !important;
+  color: var(--text-secondary) !important;
+  border-color: var(--border-color) !important;
   transition: all 0.2s ease;
 }
 .leaflet-control-zoom a:hover {
-  background-color: #C85A32 !important;
+  background-color: var(--color-terracotta) !important;
   color: #FFFFFF !important;
 }
 
-.leaflet-control-scale-line {
-  background: rgba(20, 24, 32, 0.8) !important;
-  border-color: #D9CAB3 !important;
-  color: #D9CAB3 !important;
-  font-family: var(--font-mono) !important;
-  font-size: 10px !important;
-  padding: 2px 6px !important;
-  border-radius: 4px;
-}
-
-/* Pin Hover Animations */
-.archaeo-pin-wrapper:hover {
-  z-index: 9999 !important;
-}
-
-/* Cluster Centroid Badge on Leaflet */
-.cluster-centroid-badge {
-  background: transparent;
-  border: none;
-}
-
-/* Smooth Transitions */
-.transition-standard {
+/* Interactive Stratigraphy Trench Styling */
+.stratum-row {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+}
+.stratum-row:hover {
+  transform: translateX(6px);
+}
+.stratum-row.active-stratum {
+  border-left: 5px solid var(--color-gold);
+  background: rgba(212, 175, 55, 0.14) !important;
 }
 
-/* Drag and Drop Zone Pulse */
-.dropzone-pulse {
-  animation: subtlePulse 3s infinite ease-in-out;
+/* Soil Layer Textures - Wheeler-Kenyon Box Trench Horizons */
+.soil-humus {
+  background: linear-gradient(135deg, #2A2118 0%, #3B2E22 100%);
+  border-left: 4px solid #4A3E31;
 }
-@keyframes subtlePulse {
-  0%, 100% { border-color: rgba(200, 90, 50, 0.4); }
-  50% { border-color: rgba(200, 90, 50, 0.8); }
+.soil-residential {
+  background: linear-gradient(135deg, #443224 0%, #5C4330 100%);
+  border-left: 4px solid #755942;
+}
+.soil-ash {
+  background: linear-gradient(135deg, #32353A 0%, #454A50 100%);
+  border-left: 4px solid #6E757C;
+}
+.soil-rampart {
+  background: linear-gradient(135deg, #612716 0%, #7E3720 100%);
+  border-left: 4px solid #A83820;
+}
+.soil-neolithic {
+  background: linear-gradient(135deg, #483E31 0%, #5E5342 100%);
+  border-left: 4px solid #827663;
+}
+.soil-bedrock {
+  background: linear-gradient(135deg, #202227 0%, #2E3138 100%);
+  border-left: 4px solid #4C4E57;
 }
 
-/* Gold Shimmer Button Effect */
-.btn-gold-shimmer {
-  background: linear-gradient(135deg, #C6A664 0%, #E2C787 50%, #C6A664 100%);
-  color: #0D1015;
-  font-weight: 600;
-  transition: all 0.3s ease;
+/* Wax Seal Certificate Styling with Lion Capital relief */
+.wax-seal {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #D4381E 0%, #9A1F0A 70%, #5E0E02 100%);
+  box-shadow: 
+    0 4px 18px rgba(0, 0, 0, 0.6),
+    inset 0 2px 5px rgba(255, 255, 255, 0.45),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
-.btn-gold-shimmer:hover {
-  box-shadow: 0 4px 20px rgba(198, 166, 100, 0.4);
-  transform: translateY(-1px);
+.wax-seal::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(255, 255, 255, 0.4);
 }
 
-/* Terracotta Primary Button Effect */
+/* Raking Light RTI Shadow Effect */
+.raking-light-preview {
+  transition: filter 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Astrolabe / Compass Rose Animation */
+@keyframes compassSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.spin-slow {
+  animation: compassSpin 60s linear infinite;
+}
+
+/* Primary Button Enhancements */
 .btn-terracotta {
   background: linear-gradient(135deg, #C85A32 0%, #DC6D45 100%);
   color: #FFFFFF;
   font-weight: 600;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 .btn-terracotta:hover {
-  box-shadow: 0 4px 20px rgba(200, 90, 50, 0.4);
+  box-shadow: 0 4px 20px rgba(200, 90, 50, 0.45);
   transform: translateY(-1px);
+}
+
+.btn-gold-shimmer {
+  background: linear-gradient(135deg, #D4AF37 0%, #F5DE88 50%, #C59B27 100%);
+  color: #0A0C10;
+  font-weight: 700;
+  transition: all 0.25s ease;
+}
+.btn-gold-shimmer:hover {
+  box-shadow: 0 4px 22px rgba(212, 175, 55, 0.5);
+  transform: translateY(-1px);
+}
+
+/* ===================================================================
+   AGENTIC AI ARCHAEOLOGICAL COPILOT STYLING
+   =================================================================== */
+
+.agent-card {
+  background: linear-gradient(145deg, rgba(18, 22, 32, 0.95) 0%, rgba(22, 28, 42, 0.9) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+.agent-card:hover {
+  border-color: rgba(212, 175, 55, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* Agent Thinking Pulse */
+@keyframes agentPulse {
+  0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.45); }
+  70% { box-shadow: 0 0 0 12px rgba(212, 175, 55, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+}
+.agent-thinking {
+  animation: agentPulse 1.8s infinite;
+  border-color: var(--color-gold) !important;
+}
+
+/* Terminal Log Formatting */
+.terminal-log {
+  background: #080A0E;
+  font-family: var(--font-mono);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.terminal-log .log-director { color: #F5DE88; }
+.terminal-log .log-spatial { color: #58D68D; }
+.terminal-log .log-epigraphy { color: #5DADE2; }
+.terminal-log .log-strata { color: #F39C12; }
+.terminal-log .log-conservation { color: #EC7063; }
+.terminal-log .log-tool { color: #BB8FCE; }
+
+/* Glowing AI Trigger Button */
+.btn-ai-glow {
+  background: linear-gradient(135deg, #B84A2A 0%, #D4AF37 100%);
+  color: #FFFFFF;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 18px rgba(184, 74, 42, 0.4);
+  transition: all 0.25s ease;
+}
+.btn-ai-glow:hover {
+  box-shadow: 0 6px 26px rgba(212, 175, 55, 0.55);
+  transform: translateY(-1.5px);
 }

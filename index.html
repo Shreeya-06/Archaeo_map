@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-[#0D1015]">
+<html lang="en" class="h-full bg-[#0A0C10]">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ARCHAEOMap — Digital Archaeological Field Survey & Spatial Analysis System</title>
-  <meta name="description" content="GIS-Based Digital Archaeological Field Survey & Spatial Analysis System. Mapping the past. Understanding the patterns.">
+  <title>ARCHAEO-BHĀRAT — Digital Archaeological Survey of India & Spatial GIS System</title>
+  <meta name="description" content="ARCHAEO-BHĀRAT: Digital Archaeological Survey of India & Spatial GIS Intelligence System. Mapping ancient horizons, understanding subterranean patterns with Agentic AI.">
 
   <!-- Tailwind CSS CDN with custom Archaeological theme configuration -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -15,21 +15,21 @@
         extend: {
           colors: {
             charcoal: {
-              900: '#0D1015',
-              850: '#11151C',
-              800: '#141820',
-              750: '#181E28',
-              700: '#1C222D',
-              600: '#262E3D',
-              500: '#384254'
+              900: '#0A0C10',
+              850: '#0E1218',
+              800: '#121620',
+              750: '#161C28',
+              700: '#1B2232',
+              600: '#252F44',
+              500: '#384560'
             },
             sandstone: {
-              50: '#FAF8F5',
-              100: '#F4EFE6',
-              200: '#EAE1D2',
-              300: '#D9CAB3',
-              400: '#BDB09B',
-              500: '#8C7B6C'
+              50: '#FAF6ED',
+              100: '#F5ECD9',
+              200: '#EBDDC4',
+              300: '#D9C6A5',
+              400: '#BFA882',
+              500: '#8C7450'
             },
             terracotta: {
               DEFAULT: '#C85A32',
@@ -38,14 +38,16 @@
               dark: '#A64522'
             },
             gold: {
-              DEFAULT: '#C6A664',
-              hover: '#D8B775',
-              light: '#EAD198',
-              dark: '#A38443'
+              DEFAULT: '#D4AF37',
+              hover: '#E5C258',
+              light: '#F3DB8A',
+              dark: '#A8841B'
             }
           },
           fontFamily: {
             serif: ['Cinzel', 'serif'],
+            'serif-dec': ['"Cinzel Decorative"', 'serif'],
+            indic: ['"Yatra One"', '"Rozha One"', 'cursive', 'serif'],
             sans: ['Plus Jakarta Sans', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace']
           }
@@ -56,6 +58,11 @@
 
   <!-- Font Awesome 6 Pro Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Google Fonts: Cinzel, Cinzel Decorative, Yatra One, Rozha One, Plus Jakarta Sans, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Rozha+One&family=Yatra+One&display=swap" rel="stylesheet">
 
   <!-- Leaflet CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -71,7 +78,7 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 
-<body class="h-full text-stone-200 antialiased flex flex-col bg-carto-grid selection:bg-terracotta selection:text-white">
+<body class="h-full text-stone-200 antialiased flex flex-col bg-carto-grid bg-ancient-watermark selection:bg-terracotta selection:text-white">
 
   <!-- ================================================================
        TOP MOBILE HEADER / BREADCRUMB BAR
@@ -84,14 +91,22 @@
       <div class="flex items-center gap-2">
         <span class="text-xl">🏺</span>
         <div>
-          <h1 class="font-serif text-sm font-bold tracking-wider text-sandstone-100 leading-tight">ARCHAEOMAP</h1>
-          <p class="text-[9px] text-stone-400 tracking-wider uppercase font-mono">GIS Archaeological System</p>
+          <h1 class="font-serif text-sm font-bold tracking-wider text-sandstone-100 leading-tight">ARCHAEO-BHĀRAT</h1>
+          <p class="text-[9px] text-gold tracking-wider uppercase font-mono">पुरातत्त्व-भारत &bull; ASI GIS</p>
         </div>
       </div>
     </div>
-    <button onclick="app.navigateTo('add-artifact')" class="px-3 py-1.5 rounded-lg bg-terracotta text-white text-xs font-medium shadow">
-      <i class="fas fa-plus mr-1"></i> Record
-    </button>
+    <div class="flex items-center gap-2">
+      <button onclick="app.toggleTheme()" class="p-2 rounded-lg bg-charcoal-700 text-gold text-xs" title="Switch Theme">
+        <i class="fas fa-circle-half-stroke"></i>
+      </button>
+      <button onclick="app.navigateTo('agentic-ai')" class="px-2.5 py-1.5 rounded-lg bg-amber-950/60 border border-gold/40 text-gold text-xs font-semibold shadow">
+        <i class="fas fa-brain mr-1"></i> AI
+      </button>
+      <button onclick="app.navigateTo('add-artifact')" class="px-3 py-1.5 rounded-lg bg-terracotta text-white text-xs font-medium shadow">
+        <i class="fas fa-plus mr-1"></i> Record
+      </button>
+    </div>
   </header>
 
   <!-- Application Shell (Sidebar + Main Content Area) -->
@@ -109,14 +124,14 @@
       <div class="p-6 border-b border-stone-800/60">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-terracotta to-terracotta-dark flex items-center justify-center text-xl shadow-lg border border-terracotta/40">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-terracotta via-amber-700 to-amber-900 flex items-center justify-center text-xl shadow-lg border border-gold/40">
               🏺
             </div>
             <div>
-              <h1 class="font-serif text-lg font-black tracking-widest text-sandstone-100 flex items-center gap-1.5">
-                <span>ARCHAEO</span><span class="text-terracotta">MAP</span>
+              <h1 class="font-serif-dec text-base font-black tracking-wider text-sandstone-100 flex items-center gap-1">
+                <span>ARCHAEO</span><span class="text-terracotta">-BHĀRAT</span>
               </h1>
-              <p class="text-[10px] text-gold tracking-wider uppercase font-mono">Digital Field Survey & GIS</p>
+              <p class="text-[9.5px] text-gold tracking-wider uppercase font-mono">पुरातत्त्व-भारत &bull; ASI GIS</p>
             </div>
           </div>
           <button id="mobile-menu-close" class="lg:hidden text-stone-400 hover:text-white p-1">
@@ -124,28 +139,28 @@
           </button>
         </div>
 
-        <!-- Tagline -->
-        <p class="text-[11px] text-stone-400 italic mt-3 pt-3 border-t border-stone-800/60 leading-tight">
-          “Mapping the past. Understanding the patterns.”
+        <!-- Tagline & Sanskrit Inscription -->
+        <p class="text-[11px] text-amber-200/80 italic mt-3 pt-3 border-t border-stone-800/60 leading-tight font-serif">
+          “प्रत्नकीर्तिमपावृणु — Unveil the Glory of Ancient Heritage”
         </p>
 
-        <!-- Current Survey Project Badge -->
-        <div class="mt-3 p-2.5 rounded-xl bg-charcoal-800/90 border border-stone-700/50 flex items-center justify-between">
+        <!-- Current Survey Mission Badge -->
+        <div class="mt-3 p-2.5 rounded-xl bg-charcoal-800/90 border border-gold/30 flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span class="relative flex h-2 w-2">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
             <div class="text-[11px]">
-              <span class="text-stone-400 block text-[9px] uppercase font-mono">Survey Sector</span>
-              <span class="text-sandstone-200 font-medium">Sisupalgarh Basin</span>
+              <span class="text-stone-400 block text-[9px] uppercase font-mono">Survey Mission</span>
+              <span class="text-sandstone-200 font-medium">ASI Pan-India Horizon</span>
             </div>
           </div>
-          <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-charcoal-700 text-gold border border-stone-700">WGS84</span>
+          <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-charcoal-700 text-gold border border-gold/30">6 Sectors</span>
         </div>
       </div>
 
-      <!-- Navigation Menu Links (8 Core Sections) -->
+      <!-- Navigation Menu Links (10 Core Sections) -->
       <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         <div class="px-3 py-1.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-stone-400">
           Navigation Modules
@@ -154,63 +169,83 @@
         <!-- 1. Dashboard -->
         <a href="#dashboard" data-nav-target="dashboard" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-stone-300 hover:bg-charcoal-750 hover:text-sandstone-100 transition-all group">
           <i class="fas fa-compass w-4 text-stone-400 group-hover:text-terracotta text-sm"></i>
-          <span>Dashboard</span>
+          <span>Dashboard (सिंहावलोकन)</span>
         </a>
 
-        <!-- 2. Add Artifact -->
+        <!-- 2. Agentic AI Archaeological Analyst -->
+        <a href="#agentic-ai" data-nav-target="agentic-ai" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-amber-300 hover:bg-charcoal-750 hover:text-white transition-all group bg-amber-950/25 border border-gold/30 shadow-inner">
+          <i class="fas fa-brain-circuit w-4 text-gold group-hover:text-amber-200 text-sm"></i>
+          <span class="font-semibold">Archaeo-Agent AI</span>
+          <span class="ml-auto text-[9px] px-1.5 py-0.5 rounded bg-gold/25 text-gold font-mono uppercase font-bold tracking-wider animate-pulse">Multi-Agent</span>
+        </a>
+
+        <!-- 3. Add Artifact -->
         <a href="#add-artifact" data-nav-target="add-artifact" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-stone-300 hover:bg-charcoal-750 hover:text-sandstone-100 transition-all group">
           <i class="fas fa-circle-plus w-4 text-stone-400 group-hover:text-terracotta text-sm"></i>
           <span>Add Artifact Record</span>
           <span class="ml-auto text-[10px] px-1.5 py-0.2 rounded bg-terracotta/20 text-terracotta font-mono">Field</span>
         </a>
 
-        <!-- 3. GIS Explorer -->
+        <!-- 4. GIS Explorer -->
         <a href="#gis-explorer" data-nav-target="gis-explorer" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-stone-300 hover:bg-charcoal-750 hover:text-sandstone-100 transition-all group">
           <i class="fas fa-map-location-dot w-4 text-stone-400 group-hover:text-terracotta text-sm"></i>
           <span>GIS Explorer</span>
           <span class="ml-auto text-[10px] px-1.5 py-0.2 rounded bg-gold/20 text-gold font-mono">Core</span>
         </a>
 
-        <!-- 4. Artifact Repository -->
+        <!-- 5. Excavation Trench (Strata Simulator) -->
+        <a href="#trench" data-nav-target="trench" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-stone-300 hover:bg-charcoal-750 hover:text-sandstone-100 transition-all group">
+          <i class="fas fa-trowel w-4 text-stone-400 group-hover:text-gold text-sm"></i>
+          <span>Excavation Trench (Strata)</span>
+          <span class="ml-auto text-[10px] px-1.5 py-0.2 rounded bg-amber-500/20 text-gold font-mono">Dig</span>
+        </a>
+
+        <!-- 6. Artifact Repository -->
         <a href="#repository" data-nav-target="repository" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-stone-300 hover:bg-charcoal-750 hover:text-sandstone-100 transition-all group">
           <i class="fas fa-box-archive w-4 text-stone-400 group-hover:text-terracotta text-sm"></i>
           <span>Artifact Repository</span>
         </a>
 
-        <!-- 5. Spatial Analysis -->
+        <!-- 7. Spatial Analysis -->
         <a href="#spatial-analysis" data-nav-target="spatial-analysis" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-stone-300 hover:bg-charcoal-750 hover:text-sandstone-100 transition-all group">
           <i class="fas fa-brain w-4 text-stone-400 group-hover:text-terracotta text-sm"></i>
           <span>Spatial Analysis (DBSCAN)</span>
         </a>
 
-        <!-- 6. Analytics -->
+        <!-- 8. Analytics -->
         <a href="#analytics" data-nav-target="analytics" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-stone-300 hover:bg-charcoal-750 hover:text-sandstone-100 transition-all group">
           <i class="fas fa-chart-simple w-4 text-stone-400 group-hover:text-terracotta text-sm"></i>
           <span>Analytics & Chronology</span>
         </a>
 
-        <!-- 7. Export Data -->
+        <!-- 9. Export Data -->
         <a href="#export-data" data-nav-target="export-data" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-stone-300 hover:bg-charcoal-750 hover:text-sandstone-100 transition-all group">
           <i class="fas fa-file-export w-4 text-stone-400 group-hover:text-terracotta text-sm"></i>
           <span>Export Data</span>
         </a>
 
-        <!-- 8. About ArchaeoMap -->
+        <!-- 10. About Archaeo-Bhārat -->
         <a href="#about" data-nav-target="about" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-stone-300 hover:bg-charcoal-750 hover:text-sandstone-100 transition-all group">
           <i class="fas fa-circle-info w-4 text-stone-400 group-hover:text-terracotta text-sm"></i>
-          <span>About ArchaeoMap</span>
+          <span>About Archaeo-Bhārat</span>
         </a>
       </nav>
 
-      <!-- Bottom Utilities & Reset Action -->
+      <!-- Bottom Utilities & Theme Switcher -->
       <div class="p-4 border-t border-stone-800/60 bg-charcoal-900/60 space-y-2">
-        <button onclick="if(confirm('Restore original 36 archaeological survey demo records?')){ db.resetToDemo(); app.showToast('Demo Data Restored', 'The original 36 curated archaeological records have been reset.', 'info'); }" 
-                class="w-full py-2 px-3 rounded-lg bg-charcoal-800 hover:bg-charcoal-700 text-stone-400 hover:text-sandstone-200 text-xs font-medium transition-colors flex items-center justify-center gap-2 border border-stone-800">
-          <i class="fas fa-rotate-left text-[11px]"></i>
-          <span>Reset Demo Dataset</span>
+        <button onclick="app.toggleTheme()" id="theme-toggle-btn" 
+                class="w-full py-2 px-3 rounded-lg bg-charcoal-800 hover:bg-charcoal-700 text-gold text-xs font-medium transition-colors flex items-center justify-center gap-2 border border-stone-700/60 shadow-sm">
+          <i class="fas fa-gem text-gold"></i>
+          <span>Imperial Obsidian</span>
+        </button>
+
+        <button onclick="if(confirm('Restore original 36 Indian archaeological survey records?')){ db.resetToDemo(); app.showToast('Demo Data Restored', 'The original 36 curated Indian archaeological records have been reset.', 'info'); }" 
+                class="w-full py-1.5 px-3 rounded-lg bg-charcoal-800 hover:bg-charcoal-700 text-stone-400 hover:text-sandstone-200 text-xs font-medium transition-colors flex items-center justify-center gap-2 border border-stone-800">
+          <i class="fas fa-rotate-left text-[10px]"></i>
+          <span>Reset Demo Records</span>
         </button>
         <div class="text-[10px] text-stone-400 text-center font-mono">
-          v2.4.0 &bull; ArchaeoMap Research GIS
+          v3.0.0 &bull; ARCHAEO-BHĀRAT ASI GIS
         </div>
       </div>
     </aside>
@@ -232,15 +267,22 @@
                  placeholder="Search artifacts, sites, materials, periods..." 
                  class="w-full pl-9 pr-4 py-1.5 rounded-xl bg-charcoal-800 border border-stone-700/60 text-stone-200 placeholder-stone-500 text-xs focus:outline-none focus:border-terracotta transition-colors shadow-inner font-sans" />
           
-          <!-- Instant Autocomplete Dropdown -->
           <div id="global-search-results" class="absolute top-full left-0 right-0 mt-1.5 bg-charcoal-850 border border-stone-700 rounded-xl shadow-2xl max-h-80 overflow-y-auto hidden z-50 divide-y divide-stone-800"></div>
         </div>
 
-        <!-- Right Utilities & Action Buttons -->
+        <!-- Right Utilities, Theme Toggle & AI Trigger -->
         <div class="flex items-center gap-3">
-          <button onclick="app.navigateTo('gis-explorer')" class="px-3 py-1.5 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-gold border border-stone-700/60 text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
-            <i class="fas fa-map-marked-alt text-xs"></i>
-            <span>Interactive Map</span>
+          <button onclick="app.navigateTo('agentic-ai')" class="px-3.5 py-1.5 rounded-xl bg-amber-950/60 hover:bg-amber-900/60 text-gold border border-gold/50 text-xs font-semibold transition-all flex items-center gap-2 shadow-sm">
+            <i class="fas fa-brain-circuit text-gold"></i>
+            <span>Archaeo-Agent AI</span>
+          </button>
+          <button onclick="app.toggleTheme()" class="px-3 py-1.5 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-gold border border-stone-700/60 text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm" title="Toggle Historical Theme">
+            <i class="fas fa-circle-half-stroke text-xs"></i>
+            <span>Theme Toggle</span>
+          </button>
+          <button onclick="app.navigateTo('trench')" class="px-3 py-1.5 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-amber-300 border border-stone-700/60 text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+            <i class="fas fa-trowel text-xs"></i>
+            <span>Excavation Trench</span>
           </button>
           <button onclick="app.navigateTo('add-artifact')" class="btn-terracotta px-4 py-1.5 rounded-xl text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg">
             <i class="fas fa-plus text-[11px]"></i>
@@ -255,36 +297,41 @@
       <section id="view-dashboard" class="app-view p-6 lg:p-10 space-y-10">
 
         <!-- Hero Archaeological Banner -->
-        <div class="relative rounded-3xl overflow-hidden bg-charcoal-800 border border-stone-800 p-8 lg:p-12 hero-archaeo-pattern shadow-2xl">
+        <div class="relative rounded-3xl overflow-hidden bg-charcoal-800 border border-stone-800 p-8 lg:p-12 hero-archaeo-pattern shadow-2xl ornate-corner">
           <div class="relative z-10 max-w-3xl space-y-4">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-terracotta/15 border border-terracotta/30 text-terracotta text-[11px] font-mono uppercase tracking-wider font-semibold">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/15 border border-gold/30 text-gold text-[11px] font-mono uppercase tracking-wider font-semibold">
               <i class="fas fa-landmark text-xs"></i>
-              <span>DIGITAL ARCHAEOLOGY PLATFORM</span>
+              <span>ARCHAEOLOGICAL SURVEY OF INDIA &bull; DIGITAL RECONNAISSANCE</span>
             </div>
 
-            <h2 class="font-serif text-3xl lg:text-5xl font-extrabold text-sandstone-100 leading-tight">
-              “Mapping the Past,<br />One Discovery at a Time.”
+            <h2 class="font-serif-dec text-3xl lg:text-5xl font-extrabold text-sandstone-100 leading-tight">
+              “प्रत्नकीर्तिमपावृणु”<br />
+              <span class="text-2xl lg:text-3xl text-gold font-serif">Unveiling Ancient Civilizations of Bhārat</span>
             </h2>
 
             <p class="text-sm lg:text-base text-stone-300 font-sans leading-relaxed max-w-2xl">
-              ArchaeoMap brings archaeological field records, geographic coordinates, artifact documentation and spatial analysis together in one digital research environment.
+              From Harappan Bronze Age citadels of Dholavira & Lothal to the Mauryan monuments of Sanchi & Sisupalgarh, the monastic university of Nalanda, and the Sangam horizons of Keezhadi — ARCHAEO-BHĀRAT unites spatial GIS, Wheeler-Kenyon stratigraphy, and collaborative Agentic AI in one research environment.
             </p>
 
             <div class="pt-3 flex flex-wrap items-center gap-4">
-              <button onclick="app.navigateTo('add-artifact')" class="btn-terracotta px-6 py-3 rounded-xl text-white text-sm font-semibold flex items-center gap-2 shadow-xl">
-                <i class="fas fa-plus"></i>
-                <span>Record New Artifact</span>
+              <button onclick="app.navigateTo('agentic-ai')" class="btn-ai-glow px-6 py-3 rounded-xl text-white text-sm font-semibold flex items-center gap-2 shadow-xl">
+                <i class="fas fa-brain-circuit text-amber-200"></i>
+                <span>Launch Archaeo-Agent AI</span>
               </button>
               <button onclick="app.navigateTo('gis-explorer')" class="px-6 py-3 rounded-xl bg-charcoal-700/80 hover:bg-charcoal-700 text-sandstone-100 border border-stone-700 text-sm font-medium transition-all flex items-center gap-2 hover:border-gold/50 shadow-md">
-                <i class="fas fa-map text-gold"></i>
+                <i class="fas fa-map-location-dot text-gold"></i>
                 <span>Explore GIS Map</span>
+              </button>
+              <button onclick="app.navigateTo('trench')" class="px-5 py-3 rounded-xl bg-amber-950/40 hover:bg-amber-900/50 text-gold border border-gold/40 text-sm font-medium transition-all flex items-center gap-2 shadow-md">
+                <i class="fas fa-trowel text-terracotta"></i>
+                <span>Excavate Soil Strata</span>
               </button>
             </div>
           </div>
 
-          <!-- Subtle ancient map cartographic emblem watermark -->
+          <!-- Subtle Dharmachakra emblem watermark -->
           <div class="absolute right-4 bottom-4 opacity-5 pointer-events-none hidden md:block">
-            <i class="fas fa-compass text-[240px] text-sandstone-100"></i>
+            <i class="fas fa-dharmachakra text-[240px] text-gold"></i>
           </div>
         </div>
 
@@ -292,7 +339,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           
           <!-- Card 1: Total Artifacts -->
-          <div class="archaeo-glass p-6 rounded-2xl border border-stone-800 hover:border-terracotta/40 transition-all group shadow-xl">
+          <div class="archaeo-glass p-6 rounded-2xl border border-stone-800 hover:border-terracotta/40 transition-all group shadow-xl ornate-corner">
             <div class="flex items-center justify-between text-terracotta mb-3">
               <span class="text-xs font-mono uppercase tracking-wider text-stone-400 font-semibold">Total Artifacts</span>
               <div class="w-10 h-10 rounded-xl bg-terracotta/15 flex items-center justify-center text-lg">
@@ -309,7 +356,7 @@
           </div>
 
           <!-- Card 2: Survey Sites -->
-          <div class="archaeo-glass p-6 rounded-2xl border border-stone-800 hover:border-gold/40 transition-all group shadow-xl">
+          <div class="archaeo-glass p-6 rounded-2xl border border-stone-800 hover:border-gold/40 transition-all group shadow-xl ornate-corner">
             <div class="flex items-center justify-between text-gold mb-3">
               <span class="text-xs font-mono uppercase tracking-wider text-stone-400 font-semibold">Survey Sites</span>
               <div class="w-10 h-10 rounded-xl bg-gold/15 flex items-center justify-center text-lg">
@@ -326,7 +373,7 @@
           </div>
 
           <!-- Card 3: Artifact Categories -->
-          <div class="archaeo-glass p-6 rounded-2xl border border-stone-800 hover:border-blue-500/40 transition-all group shadow-xl">
+          <div class="archaeo-glass p-6 rounded-2xl border border-stone-800 hover:border-blue-500/40 transition-all group shadow-xl ornate-corner">
             <div class="flex items-center justify-between text-blue-400 mb-3">
               <span class="text-xs font-mono uppercase tracking-wider text-stone-400 font-semibold">Artifact Categories</span>
               <div class="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center text-lg">
@@ -343,7 +390,7 @@
           </div>
 
           <!-- Card 4: Spatial Clusters -->
-          <div class="archaeo-glass p-6 rounded-2xl border border-stone-800 hover:border-purple-500/40 transition-all group shadow-xl">
+          <div class="archaeo-glass p-6 rounded-2xl border border-stone-800 hover:border-purple-500/40 transition-all group shadow-xl ornate-corner">
             <div class="flex items-center justify-between text-purple-400 mb-3">
               <span class="text-xs font-mono uppercase tracking-wider text-stone-400 font-semibold">Spatial Clusters</span>
               <div class="w-10 h-10 rounded-xl bg-purple-500/15 flex items-center justify-center text-lg">
@@ -460,8 +507,300 @@
             </button>
           </div>
 
-          <!-- Cards Grid -->
           <div id="recent-discoveries-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+
+      </section>
+
+      <!-- ==============================================================
+           SECTION: ARCHAEO-AGENT (AUTONOMOUS ARCHAEOLOGICAL AI NETWORK)
+           ============================================================== -->
+      <section id="view-agentic-ai" class="app-view p-6 lg:p-10 space-y-8 hidden">
+        
+        <!-- Header Banner -->
+        <div class="relative rounded-3xl overflow-hidden bg-gradient-to-br from-charcoal-850 via-charcoal-800 to-amber-950/30 border border-gold/40 p-8 lg:p-10 shadow-2xl ornate-corner">
+          <div class="max-w-4xl space-y-3 relative z-10">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gold/15 border border-gold/40 text-gold text-xs font-mono uppercase font-bold tracking-wider">
+              <i class="fas fa-brain-circuit text-amber-300"></i>
+              <span>ARCHAEO-AGENT &bull; AUTONOMOUS MULTI-AGENT INTELLIGENCE NETWORK</span>
+            </div>
+            
+            <h2 class="font-serif-dec text-2xl lg:text-4xl font-black text-sandstone-100 tracking-wide leading-tight">
+              स्वायत्त पुरातत्त्व अन्वेषण तन्त्र<br />
+              <span class="text-xl lg:text-2xl text-gold font-serif font-bold">Collaborative Multi-Agent Archaeological Intelligence</span>
+            </h2>
+            
+            <p class="text-xs lg:text-sm text-stone-300 leading-relaxed font-sans max-w-3xl">
+              An autonomous multi-agent system designed for the Archaeological Survey of India (ASI). Powered by hierarchical ReAct task decomposition, specialized domain agents cross-examine epigraphic scripts, verify Wheeler-Kenyon soil stratigraphy, perform Haversine DBSCAN spatial clustering, and formulate multi-agent consensus field briefings.
+            </p>
+
+            <!-- Agentic AI Status Badges -->
+            <div class="pt-2 flex flex-wrap items-center gap-2 text-[11px] font-mono">
+              <span class="px-3 py-1 rounded-lg bg-charcoal-900/90 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 5 Autonomous Agents Active
+              </span>
+              <span class="px-3 py-1 rounded-lg bg-charcoal-900/90 text-gold border border-gold/30 flex items-center gap-1.5">
+                <i class="fas fa-diagram-project"></i> Protocol: Hierarchical ReAct + DAG
+              </span>
+              <span class="px-3 py-1 rounded-lg bg-charcoal-900/90 text-sky-400 border border-sky-500/30 flex items-center gap-1.5">
+                <i class="fas fa-book-atlas"></i> Grounding: ASI Epigraphia & Wheeler Strata
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5 Specialized Autonomous Agent Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          
+          <!-- Agent 1: Director -->
+          <div id="agent-card-director" class="agent-card p-5 rounded-2xl flex flex-col justify-between shadow-xl">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between">
+                <div class="w-10 h-10 rounded-xl bg-gold/15 border border-gold/30 text-gold flex items-center justify-center text-base">
+                  <i class="fas fa-crown"></i>
+                </div>
+                <span class="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-gold/20 text-gold border border-gold/30">Orchestrator</span>
+              </div>
+              <div>
+                <h4 class="font-serif font-bold text-sm text-sandstone-100">Survey Director</h4>
+                <p class="text-[10px] text-gold font-indic">सूत्रधार (Chief Coordinator)</p>
+              </div>
+              <p class="text-[11px] text-stone-300 leading-snug">
+                Decomposes survey queries into sub-agent DAGs and synthesizes cross-agent consensus reports.
+              </p>
+            </div>
+            <div class="pt-3 border-t border-stone-800/80 mt-3 text-[10px] font-mono" id="agent-status-director">
+              <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-1.5"></span><span class="text-stone-400">Online & Ready</span>
+            </div>
+          </div>
+
+          <!-- Agent 2: Spatial GIS -->
+          <div id="agent-card-spatial" class="agent-card p-5 rounded-2xl flex flex-col justify-between shadow-xl">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-base">
+                  <i class="fas fa-earth-asia"></i>
+                </div>
+                <span class="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Spatial GIS</span>
+              </div>
+              <div>
+                <h4 class="font-serif font-bold text-sm text-sandstone-100">Geostatistician</h4>
+                <p class="text-[10px] text-emerald-400 font-indic">भू-स्थानिक विश्लेषक</p>
+              </div>
+              <p class="text-[11px] text-stone-300 leading-snug">
+                Runs Haversine DBSCAN clustering to uncover ancient workshop perimeters and riverine trade access.
+              </p>
+            </div>
+            <div class="pt-3 border-t border-stone-800/80 mt-3 text-[10px] font-mono" id="agent-status-spatial">
+              <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-1.5"></span><span class="text-stone-400">Online & Ready</span>
+            </div>
+          </div>
+
+          <!-- Agent 3: Epigraphy -->
+          <div id="agent-card-epigraphy" class="agent-card p-5 rounded-2xl flex flex-col justify-between shadow-xl">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between">
+                <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center text-base">
+                  <i class="fas fa-scroll"></i>
+                </div>
+                <span class="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">Epigraphy</span>
+              </div>
+              <div>
+                <h4 class="font-serif font-bold text-sm text-sandstone-100">Epigraphist</h4>
+                <p class="text-[10px] text-sky-400 font-indic">अभिलेखविद (Paleographer)</p>
+              </div>
+              <p class="text-[11px] text-stone-300 leading-snug">
+                Deciphers Indus glyphs, Ashokan lapidary Brahmi, Nalanda monastic seals, and Sangam Tamil-Brahmi.
+              </p>
+            </div>
+            <div class="pt-3 border-t border-stone-800/80 mt-3 text-[10px] font-mono" id="agent-status-epigraphy">
+              <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-1.5"></span><span class="text-stone-400">Online & Ready</span>
+            </div>
+          </div>
+
+          <!-- Agent 4: Chrono-Stratigrapher -->
+          <div id="agent-card-stratigraphy" class="agent-card p-5 rounded-2xl flex flex-col justify-between shadow-xl">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center text-base">
+                  <i class="fas fa-layer-group"></i>
+                </div>
+                <span class="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">Strata</span>
+              </div>
+              <div>
+                <h4 class="font-serif font-bold text-sm text-sandstone-100">Stratigrapher</h4>
+                <p class="text-[10px] text-amber-400 font-indic">कालक्रम स्तरविद</p>
+              </div>
+              <p class="text-[11px] text-stone-300 leading-snug">
+                Audits Wheeler-Kenyon box-trench depths (m) against the Law of Superposition to detect stratigraphic inversions.
+              </p>
+            </div>
+            <div class="pt-3 border-t border-stone-800/80 mt-3 text-[10px] font-mono" id="agent-status-stratigraphy">
+              <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-1.5"></span><span class="text-stone-400">Online & Ready</span>
+            </div>
+          </div>
+
+          <!-- Agent 5: Conservator -->
+          <div id="agent-card-conservation" class="agent-card p-5 rounded-2xl flex flex-col justify-between shadow-xl">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between">
+                <div class="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400 flex items-center justify-center text-base">
+                  <i class="fas fa-flask-vial"></i>
+                </div>
+                <span class="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30">Conservation</span>
+              </div>
+              <div>
+                <h4 class="font-serif font-bold text-sm text-sandstone-100">Conservator</h4>
+                <p class="text-[10px] text-red-400 font-indic">संरक्षण विशेषज्ञ</p>
+              </div>
+              <p class="text-[11px] text-stone-300 leading-snug">
+                Diagnoses bronze disease, terracotta salt flaking, and steatite vitrification to prescribe preservation standards.
+              </p>
+            </div>
+            <div class="pt-3 border-t border-stone-800/80 mt-3 text-[10px] font-mono" id="agent-status-conservation">
+              <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-1.5"></span><span class="text-stone-400">Online & Ready</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Interactive Control Console -->
+        <div class="bg-charcoal-800 p-6 rounded-3xl border border-stone-800 shadow-xl space-y-5 ornate-corner">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-700/60 pb-4">
+            <div>
+              <h3 class="font-serif text-lg font-bold text-sandstone-100 flex items-center gap-2">
+                <i class="fas fa-sliders text-gold"></i>
+                <span>Multi-Agent Autonomous Survey Controls</span>
+              </h3>
+              <p class="text-xs text-stone-400">Trigger end-to-end multi-agent audits or run targeted domain investigations.</p>
+            </div>
+            <button id="agent-run-audit-btn" class="btn-ai-glow px-6 py-2.5 rounded-xl text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xl">
+              <i class="fas fa-play"></i>
+              <span>Launch Full Pan-India Survey Audit</span>
+            </button>
+          </div>
+
+          <!-- Quick Investigation Scenario Chips -->
+          <div class="space-y-2">
+            <span class="text-[10px] uppercase font-mono text-gold tracking-wider font-semibold block">
+              Pre-Configured Archaeological Research Scenarios:
+            </span>
+            <div class="flex flex-wrap gap-2.5">
+              <button data-agent-scenario="trade" class="px-3.5 py-2 rounded-xl bg-charcoal-900 hover:bg-charcoal-700 text-stone-200 hover:text-white border border-stone-700/80 hover:border-gold/40 text-xs font-medium transition-all flex items-center gap-2 shadow-sm">
+                <i class="fas fa-ship text-sky-400"></i>
+                <span>Lothal & Dholavira Maritime Trade Network</span>
+              </button>
+              <button data-agent-scenario="epigraphy" class="px-3.5 py-2 rounded-xl bg-charcoal-900 hover:bg-charcoal-700 text-stone-200 hover:text-white border border-stone-700/80 hover:border-gold/40 text-xs font-medium transition-all flex items-center gap-2 shadow-sm">
+                <i class="fas fa-scroll text-amber-400"></i>
+                <span>Ashokan Brahmi vs Keezhadi Tamil-Brahmi</span>
+              </button>
+              <button data-agent-scenario="strata" class="px-3.5 py-2 rounded-xl bg-charcoal-900 hover:bg-charcoal-700 text-stone-200 hover:text-white border border-stone-700/80 hover:border-gold/40 text-xs font-medium transition-all flex items-center gap-2 shadow-sm">
+                <i class="fas fa-layer-group text-orange-400"></i>
+                <span>Wheeler-Kenyon Stratigraphic Depth Audit</span>
+              </button>
+              <button data-agent-scenario="clusters" class="px-3.5 py-2 rounded-xl bg-charcoal-900 hover:bg-charcoal-700 text-stone-200 hover:text-white border border-stone-700/80 hover:border-gold/40 text-xs font-medium transition-all flex items-center gap-2 shadow-sm">
+                <i class="fas fa-cubes-stacked text-purple-400"></i>
+                <span>DBSCAN Workshop Density Clustering</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Natural Language Interactive Query Terminal -->
+          <div class="space-y-2 pt-2 border-t border-stone-800">
+            <label for="agent-query-input" class="text-[10px] uppercase font-mono text-stone-400 font-semibold block">
+              Consult Archaeo-Agent Copilot (Natural Language Query):
+            </label>
+            <div class="flex items-center gap-3">
+              <div class="relative flex-1">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gold">
+                  <i class="fas fa-terminal text-xs"></i>
+                </div>
+                <input type="text" id="agent-query-input" 
+                       placeholder="e.g. 'Check bronze conservation at Nalanda Monastery 1', 'Are any artifacts deeper than 2.5m?', 'Show steatite unicorn seals'..." 
+                       class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs focus:outline-none focus:border-gold transition-colors font-sans shadow-inner" />
+              </div>
+              <button id="agent-query-submit" class="px-5 py-2.5 rounded-xl bg-charcoal-700 hover:bg-terracotta text-sandstone-100 hover:text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 shrink-0">
+                <i class="fas fa-paper-plane text-xs"></i>
+                <span>Ask Agents</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Multi-Agent Reasoning Execution Stream -->
+        <div class="bg-charcoal-850 rounded-3xl border border-stone-800 shadow-2xl overflow-hidden space-y-0">
+          
+          <!-- Terminal Header -->
+          <div class="px-6 py-3.5 bg-charcoal-900/90 border-b border-stone-800 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="flex items-center gap-1.5">
+                <span class="w-3 h-3 rounded-full bg-red-500/80 inline-block"></span>
+                <span class="w-3 h-3 rounded-full bg-yellow-500/80 inline-block"></span>
+                <span class="w-3 h-3 rounded-full bg-green-500/80 inline-block"></span>
+              </div>
+              <span class="text-xs font-mono text-stone-300 font-semibold pl-2 border-l border-stone-700/60">
+                Live ReAct Execution Stream &bull; Multi-Agent Reasoning Trace
+              </span>
+            </div>
+            <div class="flex items-center gap-3">
+              <button id="agent-clear-logs-btn" class="text-[10px] font-mono text-stone-400 hover:text-white transition-colors flex items-center gap-1">
+                <i class="fas fa-trash-can text-[10px]"></i> Clear Trace
+              </button>
+              <span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                ● Telemetry Stream Active
+              </span>
+            </div>
+          </div>
+
+          <!-- Terminal Logs Container -->
+          <div id="agent-terminal-logs" class="p-6 max-h-[380px] overflow-y-auto space-y-3 bg-[#080A0E] text-stone-200">
+            <div class="text-stone-500 font-mono text-xs italic">
+              // ARCHAEO-AGENT v3.0 Multi-Agent Orchestrator initialized.<br />
+              // Click "Launch Full Pan-India Survey Audit" or select an investigation scenario above to start autonomous reasoning.
+            </div>
+          </div>
+        </div>
+
+        <!-- Synthesized Multi-Agent Consensus Briefing Card -->
+        <div id="agent-consensus-card" class="hidden bg-gradient-to-br from-charcoal-850 to-charcoal-800 p-8 rounded-3xl border-2 border-gold/50 shadow-2xl space-y-6 animate-fadeIn ornate-corner">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-700/70 pb-4">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">🏛️</span>
+                <span class="text-[10px] font-mono uppercase tracking-widest text-gold font-bold">Archaeological Survey of India</span>
+              </div>
+              <h3 id="consensus-title" class="font-serif text-xl font-bold text-sandstone-100">
+                Multi-Agent Synthesis Consensus Briefing
+              </h3>
+            </div>
+            <div class="flex items-center gap-3">
+              <span id="consensus-confidence" class="px-3.5 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 font-mono text-xs font-bold border border-emerald-500/40">
+                99.4% Consensus
+              </span>
+              <button id="consensus-download-btn" class="px-4 py-1.5 rounded-xl bg-charcoal-700 hover:bg-gold hover:text-black text-sandstone-100 text-xs font-bold transition-colors flex items-center gap-1.5 shadow">
+                <i class="fas fa-file-arrow-down"></i>
+                <span>Export Brief (JSON)</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="space-y-3">
+              <h4 class="font-serif text-xs font-bold text-gold uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fas fa-clipboard-check text-emerald-400"></i>
+                <span>Cross-Agent Validated Findings</span>
+              </h4>
+              <ul id="consensus-findings-list" class="space-y-2"></ul>
+            </div>
+
+            <div class="space-y-3">
+              <h4 class="font-serif text-xs font-bold text-gold uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fas fa-compass-drafting text-amber-400"></i>
+                <span>Field Directives & Recommendations</span>
+              </h4>
+              <ul id="consensus-recs-list" class="space-y-2"></ul>
+            </div>
+          </div>
         </div>
 
       </section>
@@ -471,7 +810,6 @@
            ============================================================== -->
       <section id="view-add-artifact" class="app-view p-6 lg:p-10 space-y-8 hidden">
         
-        <!-- Header -->
         <div class="max-w-4xl">
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-terracotta/15 text-terracotta text-xs font-mono uppercase font-semibold mb-2">
             <i class="fas fa-clipboard-list"></i> Field Registration
@@ -482,7 +820,6 @@
           </p>
         </div>
 
-        <!-- Success notification banner -->
         <div id="add-artifact-success" class="hidden p-5 rounded-2xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-200 shadow-xl flex items-center gap-4 max-w-4xl">
           <div class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-xl shrink-0 text-emerald-400">
             ✓
@@ -496,8 +833,7 @@
           </button>
         </div>
 
-        <!-- Form Container -->
-        <form id="form-add-artifact" class="max-w-4xl space-y-8 bg-charcoal-800 p-8 rounded-3xl border border-stone-800 shadow-2xl">
+        <form id="form-add-artifact" class="max-w-4xl space-y-8 bg-charcoal-800 p-8 rounded-3xl border border-stone-800 shadow-2xl ornate-corner">
           
           <!-- SECTION 1: Artifact Identification -->
           <div class="space-y-4 pb-6 border-b border-stone-700/60">
@@ -509,7 +845,6 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <!-- Name -->
               <div class="space-y-1.5 md:col-span-2">
                 <label for="artifact-name" class="block text-xs font-semibold text-stone-300">
                   Artifact Name <span class="text-terracotta">*</span>
@@ -518,7 +853,6 @@
                        class="w-full px-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs focus:outline-none focus:border-terracotta transition-colors shadow-inner" />
               </div>
 
-              <!-- Type -->
               <div class="space-y-1.5">
                 <label for="artifact-type" class="block text-xs font-semibold text-stone-300">Artifact Type</label>
                 <select id="artifact-type" class="w-full px-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs focus:outline-none focus:border-terracotta transition-colors">
@@ -533,7 +867,6 @@
                 </select>
               </div>
 
-              <!-- Material -->
               <div class="space-y-1.5">
                 <label for="artifact-material" class="block text-xs font-semibold text-stone-300">Material</label>
                 <select id="artifact-material" class="w-full px-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs focus:outline-none focus:border-terracotta transition-colors">
@@ -547,18 +880,19 @@
                 </select>
               </div>
 
-              <!-- Period -->
               <div class="space-y-1.5 md:col-span-2">
                 <label for="artifact-period" class="block text-xs font-semibold text-stone-300">Historical Period</label>
                 <select id="artifact-period" class="w-full px-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs focus:outline-none focus:border-terracotta transition-colors">
-                  <option value="Ancient">Ancient</option>
-                  <option value="Prehistoric">Prehistoric</option>
-                  <option value="Early Medieval">Early Medieval</option>
-                  <option value="Medieval">Medieval</option>
-                  <option value="Late Medieval">Late Medieval</option>
-                  <option value="Colonial">Colonial</option>
-                  <option value="Modern">Modern</option>
-                  <option value="Unknown">Unknown</option>
+                  <option value="Harappan (Indus Valley)">Harappan (Indus Valley, c. 2600–1900 BCE)</option>
+                  <option value="Vedic & Mahajanapada">Vedic & Mahajanapada (c. 1500–500 BCE)</option>
+                  <option value="Mauryan (c. 300 BCE)">Mauryan Imperial (c. 322–185 BCE)</option>
+                  <option value="Shunga-Satavahana">Shunga-Satavahana (c. 185 BCE–200 CE)</option>
+                  <option value="Gupta Classical (c. 400 CE)">Gupta Classical Golden Age (c. 320–550 CE)</option>
+                  <option value="Gupta-Pala (c. 700 CE)">Gupta-Pala Monastic Era (c. 700–1150 CE)</option>
+                  <option value="Chola Imperial (c. 1050 CE)">Chola Imperial (c. 850–1250 CE)</option>
+                  <option value="Vijayanagara (c. 1500 CE)">Vijayanagara Empire (c. 1336–1565 CE)</option>
+                  <option value="Sangam Era (c. 500 BCE)">Sangam Era (c. 6th c. BCE–3rd c. CE)</option>
+                  <option value="Colonial">Colonial Era (c. 1750–1947 CE)</option>
                 </select>
               </div>
             </div>
@@ -574,35 +908,32 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <!-- Site -->
               <div class="space-y-1.5">
                 <label for="artifact-site" class="block text-xs font-semibold text-stone-300">
-                  Archaeological Site <span class="text-terracotta">*</span>
+                  Archaeological Survey Sector <span class="text-terracotta">*</span>
                 </label>
                 <select id="artifact-site" required class="w-full px-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs focus:outline-none focus:border-terracotta transition-colors">
-                  <option value="Site A">Site A (Citadel Sector)</option>
-                  <option value="Site B">Site B (Southern Terraces)</option>
-                  <option value="Site C">Site C (Eastern Mound)</option>
-                  <option value="Site D">Site D (Riverbank Sector)</option>
-                  <option value="Site E">Site E (Outer Enclosure)</option>
+                  <option value="Dholavira">Dholavira & Lothal (Indus Valley Citadel - Gujarat)</option>
+                  <option value="Sisupalgarh">Sisupalgarh & Dhauli (Ancient Kalinga - Odisha)</option>
+                  <option value="Sanchi">Sanchi & Vidisha (Great Stupa Complex - MP)</option>
+                  <option value="Nalanda">Nalanda Mahavihara (Ancient Monastic University - Bihar)</option>
+                  <option value="Hampi">Hampi / Vijayanagara (Imperial Capital - Karnataka)</option>
+                  <option value="Keezhadi">Keezhadi (Sangam Era Vaigai Valley - Tamil Nadu)</option>
                 </select>
               </div>
 
-              <!-- Excavation Area / Trench -->
               <div class="space-y-1.5">
                 <label for="artifact-excavation-area" class="block text-xs font-semibold text-stone-300">Excavation Area / Trench</label>
                 <input type="text" id="artifact-excavation-area" placeholder="e.g. Trench IV, Bastion Sector..." 
                        class="w-full px-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs focus:outline-none focus:border-terracotta transition-colors shadow-inner" />
               </div>
 
-              <!-- Layer / Context -->
               <div class="space-y-1.5">
                 <label for="artifact-layer" class="block text-xs font-semibold text-stone-300">Layer / Stratigraphic Context</label>
                 <input type="text" id="artifact-layer" placeholder="e.g. Stratum III (Ash Fill), Bedrock cut..." 
                        class="w-full px-4 py-2.5 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-100 text-xs focus:outline-none focus:border-terracotta transition-colors shadow-inner" />
               </div>
 
-              <!-- Depth -->
               <div class="space-y-1.5">
                 <label for="artifact-depth" class="block text-xs font-semibold text-stone-300">
                   Excavation Depth (meters) <span class="text-terracotta">*</span>
@@ -643,7 +974,6 @@
               </div>
             </div>
 
-            <!-- Interactive Mini-Map -->
             <div class="rounded-2xl overflow-hidden border border-stone-700 shadow-xl h-64 relative bg-charcoal-900">
               <div id="picker-map" class="w-full h-full"></div>
               <div class="absolute bottom-2 left-2 z-[400] bg-charcoal-900/90 backdrop-blur-sm px-2.5 py-1 rounded text-[10px] text-sandstone-300 border border-stone-700 font-mono">
@@ -688,7 +1018,6 @@
               <span class="text-[11px] text-stone-400">Supports JPG, JPEG, PNG, WEBP</span>
             </div>
 
-            <!-- Drag and Drop Image Uploader -->
             <input type="file" id="artifact-file-input" accept="image/jpeg, image/png, image/webp" class="hidden" />
             
             <div id="artifact-dropzone" class="p-8 border-2 border-dashed border-stone-700 hover:border-terracotta rounded-2xl text-center cursor-pointer transition-colors dropzone-pulse bg-charcoal-900/50 group">
@@ -700,7 +1029,6 @@
               <p class="text-[10px] text-stone-400 mt-2 font-mono">JPG &bull; JPEG &bull; PNG &bull; WEBP (Max 10MB)</p>
             </div>
 
-            <!-- Upload Live Preview Container -->
             <div id="upload-preview-container" class="hidden relative rounded-2xl overflow-hidden border border-stone-700 bg-stone-900 h-56 w-full max-w-sm mx-auto shadow-xl">
               <img id="upload-preview-img" src="" alt="Artifact Preview" class="w-full h-full object-cover" />
               <button type="button" id="remove-upload-btn" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-charcoal-900/80 text-white hover:bg-rose-600 flex items-center justify-center transition-colors">
@@ -708,7 +1036,6 @@
               </button>
             </div>
 
-            <!-- Curated Quick Preset Photos -->
             <div class="space-y-2 pt-2">
               <span class="text-[11px] text-stone-400 block font-mono uppercase">Or choose from curated specimen photographs:</span>
               <div class="flex flex-wrap gap-2">
@@ -744,9 +1071,9 @@
       </section>
 
       <!-- ==============================================================
-           SECTION 3: GIS EXPLORER (CORE GIS VISUAL EXPERIENCE)
+           SECTION 3: GIS EXPLORER (WITH TIMELINE TIME-TRAVEL SCRUBBER)
            ============================================================== -->
-      <section id="view-gis-explorer" class="app-view h-full flex flex-col p-6 space-y-4 hidden">
+      <section id="view-gis-explorer" class="app-view h-full flex flex-col p-6 space-y-3 hidden">
         
         <!-- Header & Subtitle -->
         <div class="flex flex-wrap items-end justify-between gap-4">
@@ -754,34 +1081,44 @@
             <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-gold/15 text-gold text-xs font-mono uppercase font-semibold mb-1">
               <i class="fas fa-satellite"></i> GIS Geospatial Visualizer
             </div>
-            <h2 class="font-serif text-3xl font-extrabold text-sandstone-100">GIS Explorer</h2>
+            <h2 class="font-serif-dec text-2xl lg:text-3xl font-extrabold text-sandstone-100">GIS Explorer</h2>
             <p class="text-xs text-stone-400 mt-0.5">
-              Explore the geographic distribution of recorded archaeological discoveries.
+              Explore the geographic distribution and spatial clusters of archaeological discoveries.
             </p>
           </div>
 
-          <!-- Layer Switcher Buttons -->
-          <div class="flex items-center gap-1.5 p-1 bg-charcoal-800 rounded-xl border border-stone-800 shadow-md">
+          <!-- Layer Switcher & Sepia Filter Buttons -->
+          <div class="flex flex-wrap items-center gap-1.5 p-1 bg-charcoal-800 rounded-xl border border-stone-800 shadow-md">
             <button data-layer="street" class="gis-layer-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-terracotta text-white border border-terracotta transition-all flex items-center gap-1">
-              <i class="fas fa-map"></i> Street Map
+              <i class="fas fa-map"></i> Street
             </button>
             <button data-layer="topo" class="gis-layer-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-charcoal-700 text-stone-300 border border-stone-700 transition-all flex items-center gap-1 hover:text-white">
-              <i class="fas fa-mountain"></i> Topographic
+              <i class="fas fa-mountain"></i> Topo
             </button>
             <button data-layer="satellite" class="gis-layer-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-charcoal-700 text-stone-300 border border-stone-700 transition-all flex items-center gap-1 hover:text-white">
               <i class="fas fa-globe"></i> Satellite
             </button>
             <button data-layer="dark" class="gis-layer-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-charcoal-700 text-stone-300 border border-stone-700 transition-all flex items-center gap-1 hover:text-white">
-              <i class="fas fa-moon"></i> Dark Theme
+              <i class="fas fa-moon"></i> Dark
+            </button>
+            <button id="gis-btn-sepia" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-charcoal-700 text-gold border border-stone-700 transition-all flex items-center gap-1 hover:bg-gold hover:text-charcoal-900" title="Toggle Vintage Sepia Map Filter">
+              <i class="fas fa-scroll"></i> Sepia
             </button>
           </div>
         </div>
 
         <!-- Main GIS Map Viewport & Floating Control Panel -->
-        <div class="relative flex-1 min-h-[600px] w-full rounded-3xl overflow-hidden border border-stone-800 shadow-2xl bg-charcoal-800">
+        <div class="relative flex-1 min-h-[560px] w-full rounded-3xl overflow-hidden border border-stone-800 shadow-2xl bg-charcoal-800">
           
           <!-- Leaflet Map Container -->
           <div id="gis-map" class="w-full h-full z-10"></div>
+
+          <!-- Astrolabe / Compass Rose Watermark Widget (Top-Left under zoom) -->
+          <div class="absolute top-20 left-4 z-[400] pointer-events-none opacity-40 hover:opacity-80 transition-opacity hidden sm:block">
+            <div class="w-14 h-14 rounded-full border-2 border-gold/50 flex items-center justify-center bg-charcoal-900/60 backdrop-blur-sm spin-slow shadow-lg">
+              <i class="fas fa-compass-drafting text-gold text-lg"></i>
+            </div>
+          </div>
 
           <!-- Floating Map Control Panel (Top-Right) -->
           <div class="absolute top-4 right-4 z-[400] w-80 max-w-[calc(100%-2rem)] bg-charcoal-850/95 backdrop-blur-md rounded-2xl border border-stone-700/70 p-4 shadow-2xl space-y-4 text-xs font-sans">
@@ -831,12 +1168,15 @@
                   <label for="gis-filter-period" class="block text-[11px] text-stone-400 mb-1">Period</label>
                   <select id="gis-filter-period" class="w-full px-2.5 py-1.5 rounded-lg bg-charcoal-800 border border-stone-700 text-stone-200 text-xs focus:outline-none focus:border-terracotta">
                     <option value="All">All Periods</option>
-                    <option value="Ancient">Ancient</option>
-                    <option value="Prehistoric">Prehistoric</option>
-                    <option value="Early Medieval">Early Medieval</option>
-                    <option value="Medieval">Medieval</option>
-                    <option value="Late Medieval">Late Medieval</option>
-                    <option value="Colonial">Colonial</option>
+                    <option value="Harappan (Indus Valley)">Harappan (Indus Valley)</option>
+                    <option value="Vedic & Mahajanapada">Vedic & Mahajanapada</option>
+                    <option value="Mauryan (c. 300 BCE)">Mauryan (c. 300 BCE)</option>
+                    <option value="Shunga-Satavahana">Shunga-Satavahana</option>
+                    <option value="Gupta Classical (c. 400 CE)">Gupta Classical (c. 400 CE)</option>
+                    <option value="Gupta-Pala (c. 700 CE)">Gupta-Pala (c. 700 CE)</option>
+                    <option value="Chola Imperial (c. 1050 CE)">Chola Imperial (c. 1050 CE)</option>
+                    <option value="Vijayanagara (c. 1500 CE)">Vijayanagara (c. 1500 CE)</option>
+                    <option value="Sangam Era (c. 500 BCE)">Sangam Era (c. 500 BCE)</option>
                   </select>
                 </div>
               </div>
@@ -845,11 +1185,12 @@
                 <label for="gis-filter-site" class="block text-[11px] text-stone-400 mb-1">Survey Sector</label>
                 <select id="gis-filter-site" class="w-full px-2.5 py-1.5 rounded-lg bg-charcoal-800 border border-stone-700 text-stone-200 text-xs focus:outline-none focus:border-terracotta">
                   <option value="All">All Survey Sectors</option>
-                  <option value="Site A">Site A (Citadel Sector)</option>
-                  <option value="Site B">Site B (Southern Terraces)</option>
-                  <option value="Site C">Site C (Eastern Mound)</option>
-                  <option value="Site D">Site D (Riverbank Sector)</option>
-                  <option value="Site E">Site E (Outer Enclosure)</option>
+                  <option value="Dholavira">Dholavira & Lothal (Gujarat)</option>
+                  <option value="Sisupalgarh">Sisupalgarh & Dhauli (Odisha)</option>
+                  <option value="Sanchi">Sanchi & Vidisha (MP)</option>
+                  <option value="Nalanda">Nalanda Mahavihara (Bihar)</option>
+                  <option value="Hampi">Hampi / Vijayanagara (Karnataka)</option>
+                  <option value="Keezhadi">Keezhadi (Tamil Nadu)</option>
                 </select>
               </div>
             </div>
@@ -891,24 +1232,38 @@
           </div>
 
           <!-- Bottom-Right HUD: Coordinates & Zoom -->
-          <div class="absolute bottom-4 right-4 z-[400] flex items-center gap-2 bg-charcoal-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-stone-700/70 text-[11px] font-mono shadow-xl">
+          <div class="absolute bottom-16 right-4 z-[400] flex items-center gap-2 bg-charcoal-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-stone-700/70 text-[11px] font-mono shadow-xl">
             <span class="text-stone-400 flex items-center gap-1"><i class="fas fa-crosshairs text-terracotta"></i> <span id="hud-lat">20.2965° N</span>, <span id="hud-lon">85.8255° E</span></span>
             <span class="text-stone-600">|</span>
             <span id="hud-zoom" class="text-gold">Zoom: 15</span>
           </div>
 
-          <!-- Type Color Legend (Bottom-Left) -->
-          <div class="absolute bottom-8 left-4 z-[400] bg-charcoal-900/90 backdrop-blur-md px-3 py-2 rounded-xl border border-stone-700/70 shadow-xl hidden md:block max-w-xs">
-            <span class="text-[10px] font-mono text-stone-400 block uppercase mb-1">Typology Key</span>
-            <div class="grid grid-cols-4 gap-x-2 gap-y-1 text-[10px]">
-              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#C85A32]"></span> Pottery</span>
-              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#D4AF37]"></span> Coin</span>
-              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#8E44AD]"></span> Sculpture</span>
-              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#2980B9]"></span> Tool</span>
-              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#E84393]"></span> Jewelry</span>
-              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#27AE60]"></span> Inscription</span>
-              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#E67E22]"></span> Brick</span>
-              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#7F8C8D]"></span> Other</span>
+          <!-- CHRONOLOGICAL TIME-TRAVEL SCRUBBER BAR (Along the bottom of map!) -->
+          <div class="absolute bottom-3 left-4 right-4 z-[400] bg-charcoal-900/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-stone-700/70 shadow-2xl flex items-center justify-between gap-2 overflow-x-auto">
+            <div class="flex items-center gap-2 text-gold shrink-0">
+              <i class="fas fa-hourglass-half text-xs"></i>
+              <span class="font-serif font-bold text-[11px] uppercase tracking-wider hidden sm:inline">Time Travel:</span>
+            </div>
+
+            <div class="flex items-center gap-1.5 overflow-x-auto text-[11px]">
+              <button data-era="All" class="timeline-era-btn px-3 py-1 rounded-lg bg-gold text-charcoal-900 font-bold transition-all shrink-0">
+                All Eras
+              </button>
+              <button data-era="Prehistoric" class="timeline-era-btn px-2.5 py-1 rounded-lg bg-charcoal-800 text-stone-400 hover:text-stone-200 transition-all shrink-0">
+                Prehistoric <span class="text-[9px] opacity-75">(c. 2000 BCE)</span>
+              </button>
+              <button data-era="Ancient" class="timeline-era-btn px-2.5 py-1 rounded-lg bg-charcoal-800 text-stone-400 hover:text-stone-200 transition-all shrink-0">
+                Ancient <span class="text-[9px] opacity-75">(Mauryan / Kushan)</span>
+              </button>
+              <button data-era="Early Medieval" class="timeline-era-btn px-2.5 py-1 rounded-lg bg-charcoal-800 text-stone-400 hover:text-stone-200 transition-all shrink-0">
+                Early Medieval <span class="text-[9px] opacity-75">(c. 600 CE)</span>
+              </button>
+              <button data-era="Medieval" class="timeline-era-btn px-2.5 py-1 rounded-lg bg-charcoal-800 text-stone-400 hover:text-stone-200 transition-all shrink-0">
+                Medieval <span class="text-[9px] opacity-75">(Ganga Dynasties)</span>
+              </button>
+              <button data-era="Colonial" class="timeline-era-btn px-2.5 py-1 rounded-lg bg-charcoal-800 text-stone-400 hover:text-stone-200 transition-all shrink-0">
+                Colonial <span class="text-[9px] opacity-75">(1800s)</span>
+              </button>
             </div>
           </div>
 
@@ -917,11 +1272,60 @@
       </section>
 
       <!-- ==============================================================
-           SECTION 4: ARTIFACT REPOSITORY
+           SECTION 4: INTERACTIVE EXCAVATION TRENCH (STRATIGRAPHY DIGGER)
+           ============================================================== -->
+      <section id="view-trench" class="app-view p-6 lg:p-10 space-y-8 hidden">
+        
+        <!-- Header -->
+        <div class="max-w-4xl">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 text-gold text-xs font-mono uppercase font-semibold mb-2">
+            <i class="fas fa-trowel"></i> Harris Matrix & Chrono-Stratigraphy
+          </div>
+          <h2 class="font-serif-dec text-3xl font-extrabold text-sandstone-100">Excavation Trench Simulator</h2>
+          <p class="text-sm text-stone-300 mt-1 leading-relaxed">
+            Click on soil strata layers to peel back vertical deposition horizons, examine soil matrix composition, and reveal the exact buried artifacts discovered at each stratigraphic depth.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          <!-- Left: Soil Strata Profile (Harris Matrix Cross-Section) -->
+          <div class="lg:col-span-7 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="font-serif text-base font-bold text-sandstone-100">Vertical Deposition Strata Profile</h3>
+              <span class="text-[10px] font-mono text-stone-400">Click a stratum to excavate</span>
+            </div>
+
+            <!-- Interactive Strata Rows Container -->
+            <div id="trench-strata-list" class="space-y-2.5"></div>
+          </div>
+
+          <!-- Right: Stratum Details & Artifact Discoveries Found at this Horizon -->
+          <div class="lg:col-span-5 space-y-4">
+            <div id="trench-active-info"></div>
+
+            <div class="bg-charcoal-800 p-5 rounded-2xl border border-stone-800 shadow-xl space-y-3">
+              <div class="flex items-center justify-between border-b border-stone-700/50 pb-2">
+                <div class="flex items-center gap-2">
+                  <i class="fas fa-gem text-terracotta"></i>
+                  <h4 class="font-serif text-sm font-bold text-sandstone-100">Artifacts Discovered In This Horizon</h4>
+                </div>
+              </div>
+
+              <!-- Uncovered Artifact Cards List -->
+              <div id="trench-artifacts-display" class="space-y-2.5 max-h-[460px] overflow-y-auto pr-1"></div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ==============================================================
+           SECTION 5: ARTIFACT REPOSITORY
            ============================================================== -->
       <section id="view-repository" class="app-view p-6 lg:p-10 space-y-6 hidden">
         
-        <!-- Header -->
         <div class="flex flex-wrap items-end justify-between gap-4">
           <div>
             <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-terracotta/15 text-terracotta text-xs font-mono uppercase font-semibold mb-1">
@@ -933,7 +1337,6 @@
             </p>
           </div>
 
-          <!-- View Mode Toggle (Grid vs Table) -->
           <div class="flex items-center gap-1 bg-charcoal-800 p-1 rounded-xl border border-stone-800 shadow">
             <button id="repo-view-grid-btn" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-charcoal-700 text-gold transition-colors flex items-center gap-1.5">
               <i class="fas fa-grip"></i> <span>Grid View</span>
@@ -947,7 +1350,6 @@
         <!-- Filter & Search Toolbar -->
         <div class="bg-charcoal-800 p-5 rounded-2xl border border-stone-800 shadow-xl space-y-4">
           
-          <!-- Search Bar -->
           <div class="relative w-full">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-500">
               <i class="fas fa-magnifying-glass text-xs"></i>
@@ -957,7 +1359,6 @@
                    class="w-full pl-9 pr-4 py-2 rounded-xl bg-charcoal-900 border border-stone-700/60 text-stone-200 placeholder-stone-500 text-xs focus:outline-none focus:border-terracotta transition-colors shadow-inner" />
           </div>
 
-          <!-- Multi-Dropdown Filters -->
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             <div>
               <label for="repo-filter-type" class="block text-[10px] uppercase font-mono text-stone-400 mb-1">Artifact Type</label>
@@ -992,28 +1393,31 @@
               <label for="repo-filter-period" class="block text-[10px] uppercase font-mono text-stone-400 mb-1">Historical Period</label>
               <select id="repo-filter-period" class="w-full px-3 py-2 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-200 text-xs focus:outline-none focus:border-terracotta">
                 <option value="All">All Periods</option>
-                <option value="Ancient">Ancient</option>
-                <option value="Prehistoric">Prehistoric</option>
-                <option value="Early Medieval">Early Medieval</option>
-                <option value="Medieval">Medieval</option>
-                <option value="Late Medieval">Late Medieval</option>
-                <option value="Colonial">Colonial</option>
+                <option value="Harappan (Indus Valley)">Harappan (Indus Valley)</option>
+                <option value="Vedic & Mahajanapada">Vedic & Mahajanapada</option>
+                <option value="Mauryan (c. 300 BCE)">Mauryan (c. 300 BCE)</option>
+                <option value="Shunga-Satavahana">Shunga-Satavahana</option>
+                <option value="Gupta Classical (c. 400 CE)">Gupta Classical (c. 400 CE)</option>
+                <option value="Gupta-Pala (c. 700 CE)">Gupta-Pala (c. 700 CE)</option>
+                <option value="Chola Imperial (c. 1050 CE)">Chola Imperial (c. 1050 CE)</option>
+                <option value="Vijayanagara (c. 1500 CE)">Vijayanagara (c. 1500 CE)</option>
+                <option value="Sangam Era (c. 500 BCE)">Sangam Era (c. 500 BCE)</option>
               </select>
             </div>
 
             <div>
-              <label for="repo-filter-site" class="block text-[10px] uppercase font-mono text-stone-400 mb-1">Site</label>
+              <label for="repo-filter-site" class="block text-[10px] uppercase font-mono text-stone-400 mb-1">Survey Sector</label>
               <select id="repo-filter-site" class="w-full px-3 py-2 rounded-xl bg-charcoal-900 border border-stone-700 text-stone-200 text-xs focus:outline-none focus:border-terracotta">
-                <option value="All">All Sites</option>
-                <option value="Site A">Site A</option>
-                <option value="Site B">Site B</option>
-                <option value="Site C">Site C</option>
-                <option value="Site D">Site D</option>
-                <option value="Site E">Site E</option>
+                <option value="All">All Survey Sectors</option>
+                <option value="Dholavira">Dholavira & Lothal (Gujarat)</option>
+                <option value="Sisupalgarh">Sisupalgarh & Dhauli (Odisha)</option>
+                <option value="Sanchi">Sanchi & Vidisha (MP)</option>
+                <option value="Nalanda">Nalanda Mahavihara (Bihar)</option>
+                <option value="Hampi">Hampi / Vijayanagara (Karnataka)</option>
+                <option value="Keezhadi">Keezhadi (Tamil Nadu)</option>
               </select>
             </div>
 
-            <!-- Depth Range Slider -->
             <div class="col-span-2 sm:col-span-1">
               <div class="flex items-center justify-between mb-1">
                 <label for="repo-filter-depth" class="block text-[10px] uppercase font-mono text-stone-400">Max Depth</label>
@@ -1033,20 +1437,16 @@
 
         </div>
 
-        <!-- Repository Content (Cards Grid or Table) -->
         <div id="repo-content-container"></div>
-
-        <!-- Pagination Bar -->
         <div id="repo-pagination" class="flex justify-center pt-4"></div>
 
       </section>
 
       <!-- ==============================================================
-           SECTION 5: SPATIAL ANALYSIS (DBSCAN CLUSTERING)
+           SECTION 6: SPATIAL ANALYSIS (DBSCAN CLUSTERING)
            ============================================================== -->
       <section id="view-spatial-analysis" class="app-view p-6 lg:p-10 space-y-8 hidden">
         
-        <!-- Header -->
         <div class="max-w-4xl">
           <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-purple-500/15 text-purple-400 text-xs font-mono uppercase font-semibold mb-1">
             <i class="fas fa-brain"></i> Machine Learning Spatial Clustering
@@ -1057,7 +1457,6 @@
           </p>
         </div>
 
-        <!-- Scientific Academic Caution Alert (as required in prompt) -->
         <div class="p-5 rounded-2xl bg-amber-950/40 border border-amber-600/40 text-amber-200 text-xs leading-relaxed flex items-start gap-3 shadow-lg">
           <i class="fas fa-circle-exclamation text-amber-400 text-base mt-0.5 shrink-0"></i>
           <div>
@@ -1067,7 +1466,6 @@
           </div>
         </div>
 
-        <!-- Interactive DBSCAN Tuner Bar -->
         <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl space-y-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
@@ -1078,7 +1476,6 @@
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 items-end">
-            <!-- Epsilon Slider -->
             <div class="space-y-1.5">
               <div class="flex justify-between text-xs">
                 <label for="spatial-eps-range" class="text-stone-300 font-medium">Epsilon Threshold (ε)</label>
@@ -1089,7 +1486,6 @@
               <span class="text-[10px] text-stone-400 block">Neighborhood search radius</span>
             </div>
 
-            <!-- MinPoints Input -->
             <div class="space-y-1.5">
               <label for="spatial-minpts-input" class="block text-xs font-medium text-stone-300">Minimum Points (MinPts)</label>
               <input type="number" id="spatial-minpts-input" min="2" max="15" value="3"
@@ -1097,7 +1493,6 @@
               <span class="text-[10px] text-stone-400 block">Threshold to declare a core observation</span>
             </div>
 
-            <!-- Recluster Action -->
             <button id="spatial-recluster-btn" class="btn-terracotta w-full py-2.5 px-4 rounded-xl text-white text-xs font-bold shadow-lg flex items-center justify-center gap-2">
               <i class="fas fa-arrows-rotate"></i>
               <span>Recompute Clusters</span>
@@ -1105,7 +1500,6 @@
           </div>
         </div>
 
-        <!-- KPI Metrics Grid -->
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           <div class="archaeo-glass p-4 rounded-xl border border-stone-800">
             <span class="text-[10px] font-mono text-stone-400 uppercase block">Total Spatial Clusters</span>
@@ -1133,10 +1527,7 @@
           </div>
         </div>
 
-        <!-- Visual Charts A, B, C -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          <!-- Chart A: Cluster Distribution -->
           <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-between">
             <div class="mb-3">
               <h4 class="font-serif text-sm font-bold text-sandstone-100">A. Cluster Distribution</h4>
@@ -1147,7 +1538,6 @@
             </div>
           </div>
 
-          <!-- Chart B: Spatial Distribution Scatter -->
           <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-between">
             <div class="mb-3">
               <h4 class="font-serif text-sm font-bold text-sandstone-100">B. Spatial Distribution (2D)</h4>
@@ -1158,20 +1548,17 @@
             </div>
           </div>
 
-          <!-- Chart C: Depth vs Spatial Distribution -->
           <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-between">
             <div class="mb-3">
               <h4 class="font-serif text-sm font-bold text-sandstone-100">C. Depth vs Spatial Distribution</h4>
-              <p class="text-[11px] text-stone-400">Stratigraphic depth vs cluster cluster group</p>
+              <p class="text-[11px] text-stone-400">Stratigraphic depth vs cluster group</p>
             </div>
             <div class="h-64 relative">
               <canvas id="chart-depth-spatial-scatter"></canvas>
             </div>
           </div>
-
         </div>
 
-        <!-- D. Cluster Summary Table -->
         <div class="bg-charcoal-800 rounded-2xl border border-stone-800 overflow-hidden shadow-xl">
           <div class="p-5 border-b border-stone-800 flex items-center justify-between">
             <div>
@@ -1200,11 +1587,10 @@
       </section>
 
       <!-- ==============================================================
-           SECTION 6: ANALYTICS PAGE
+           SECTION 7: ANALYTICS PAGE
            ============================================================== -->
       <section id="view-analytics" class="app-view p-6 lg:p-10 space-y-8 hidden">
         
-        <!-- Header -->
         <div>
           <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-gold/15 text-gold text-xs font-mono uppercase font-semibold mb-1">
             <i class="fas fa-chart-pie"></i> Statistical Aggregations
@@ -1215,16 +1601,12 @@
           </p>
         </div>
 
-        <!-- Dynamic Academic Insights Cards (as required in prompt) -->
         <div class="space-y-2">
           <h3 class="font-serif text-sm font-bold text-gold uppercase tracking-wider">Automated Academic Insights</h3>
           <div id="dynamic-academic-insights"></div>
         </div>
 
-        <!-- Charts Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
-          <!-- Stratigraphic Depth Analysis -->
           <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-between">
             <div class="flex items-center justify-between mb-4">
               <div class="flex items-center gap-2">
@@ -1241,7 +1623,6 @@
             </p>
           </div>
 
-          <!-- Material Analysis -->
           <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-between">
             <div class="flex items-center justify-between mb-4">
               <div class="flex items-center gap-2">
@@ -1258,7 +1639,6 @@
             </p>
           </div>
 
-          <!-- Chronological Period Analysis -->
           <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-between">
             <div class="flex items-center justify-between mb-4">
               <div class="flex items-center gap-2">
@@ -1275,7 +1655,6 @@
             </p>
           </div>
 
-          <!-- Site Density Comparison -->
           <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 shadow-xl flex flex-col justify-between">
             <div class="flex items-center justify-between mb-4">
               <div class="flex items-center gap-2">
@@ -1291,17 +1670,15 @@
               Comparative density gradient across Site A through Site E
             </p>
           </div>
-
         </div>
 
       </section>
 
       <!-- ==============================================================
-           SECTION 7: EXPORT DATA PAGE
+           SECTION 8: EXPORT DATA PAGE
            ============================================================== -->
       <section id="view-export-data" class="app-view p-6 lg:p-10 space-y-8 hidden">
         
-        <!-- Header -->
         <div class="max-w-3xl">
           <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-terracotta/15 text-terracotta text-xs font-mono uppercase font-semibold mb-1">
             <i class="fas fa-file-export"></i> Interoperability & GIS Data Exchange
@@ -1312,10 +1689,7 @@
           </p>
         </div>
 
-        <!-- 4 Format Cards Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          
-          <!-- Card 1: CSV -->
           <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 hover:border-terracotta/50 transition-all shadow-xl flex flex-col justify-between group">
             <div class="space-y-3">
               <div class="w-12 h-12 rounded-xl bg-terracotta/15 text-terracotta flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
@@ -1332,7 +1706,6 @@
             </button>
           </div>
 
-          <!-- Card 2: JSON -->
           <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 hover:border-gold/50 transition-all shadow-xl flex flex-col justify-between group">
             <div class="space-y-3">
               <div class="w-12 h-12 rounded-xl bg-gold/15 text-gold flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
@@ -1349,7 +1722,6 @@
             </button>
           </div>
 
-          <!-- Card 3: GeoJSON (QGIS / ArcGIS) -->
           <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 hover:border-blue-500/50 transition-all shadow-xl flex flex-col justify-between group">
             <div class="space-y-3">
               <div class="w-12 h-12 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
@@ -1366,7 +1738,6 @@
             </button>
           </div>
 
-          <!-- Card 4: Excel (XLS) -->
           <div class="bg-charcoal-800 p-6 rounded-2xl border border-stone-800 hover:border-emerald-500/50 transition-all shadow-xl flex flex-col justify-between group">
             <div class="space-y-3">
               <div class="w-12 h-12 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
@@ -1382,10 +1753,8 @@
               <span>Download Excel</span>
             </button>
           </div>
-
         </div>
 
-        <!-- Export Filtered Records Option -->
         <div class="p-6 rounded-2xl bg-charcoal-800 border border-stone-800 max-w-2xl space-y-3">
           <h4 class="font-serif text-sm font-bold text-sandstone-100">Filtered Records Export</h4>
           <p class="text-xs text-stone-400 leading-relaxed">
@@ -1399,11 +1768,10 @@
       </section>
 
       <!-- ==============================================================
-           SECTION 8: ABOUT ARCHAEMAP PAGE
+           SECTION 9: ABOUT ARCHAEMAP PAGE
            ============================================================== -->
       <section id="view-about" class="app-view p-6 lg:p-10 space-y-10 hidden">
         
-        <!-- Mission & Purpose -->
         <div class="max-w-4xl space-y-4">
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-terracotta/15 text-terracotta text-xs font-mono uppercase font-semibold">
             <i class="fas fa-shield-halved"></i> Digital Archaeological Infrastructure
@@ -1414,8 +1782,7 @@
           </p>
         </div>
 
-        <!-- Why ArchaeoMap Section (as required in prompt) -->
-        <div class="p-8 rounded-3xl bg-charcoal-800 border border-stone-800 max-w-4xl space-y-4 shadow-xl">
+        <div class="p-8 rounded-3xl bg-charcoal-800 border border-stone-800 max-w-4xl space-y-4 shadow-xl ornate-corner">
           <div class="flex items-center gap-3 text-gold">
             <i class="fas fa-lightbulb text-xl"></i>
             <h3 class="font-serif text-xl font-bold text-sandstone-100">Why ArchaeoMap?</h3>
@@ -1428,12 +1795,10 @@
           </p>
         </div>
 
-        <!-- 7 Feature Cards Grid (as required in prompt) -->
         <div class="space-y-4 max-w-4xl">
           <h3 class="font-serif text-lg font-bold text-sandstone-100">Platform Core Capabilities</h3>
 
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            
             <div class="bg-charcoal-800/80 p-5 rounded-2xl border border-stone-800 space-y-2">
               <div class="text-2xl">🏺</div>
               <h4 class="font-serif font-bold text-sandstone-100 text-sm">Digital Artifact Recording</h4>
@@ -1475,32 +1840,31 @@
               <h4 class="font-serif font-bold text-sandstone-100 text-sm">Open Data Export</h4>
               <p class="text-xs text-stone-400">Direct export in CSV, JSON, GeoJSON (QGIS/ArcGIS ready), and Excel XML formats.</p>
             </div>
-
           </div>
         </div>
 
       </section>
 
       <!-- ==============================================================
-           GLOBAL FOOTER (as required in prompt)
+           GLOBAL FOOTER
            ============================================================== -->
       <footer class="mt-auto border-t border-stone-800 bg-charcoal-850 px-8 py-8 text-xs text-stone-400 font-sans">
         <div class="flex flex-col md:flex-row items-center justify-between gap-4">
           <div class="space-y-1 text-center md:text-left">
             <div class="flex items-center justify-center md:justify-start gap-2 font-serif font-bold text-sandstone-100 text-sm">
               <span>🏺</span>
-              <span>ArchaeoMap</span>
+              <span>ARCHAEO-BHĀRAT (पुरातत्त्व-भारत)</span>
             </div>
             <p class="text-[11px] text-stone-400">
-              GIS-Based Digital Archaeological Field Survey & Spatial Analysis System
+              Digital Archaeological Survey of India & Spatial GIS Intelligence Platform
             </p>
             <p class="text-[11px] text-gold italic font-serif">
-              “Mapping the past. Understanding the patterns.”
+              “प्रत्नकीर्तिमपावृणु — Unveiling Ancient Horizons & Subterranean Patterns”
             </p>
           </div>
           <div class="text-center md:text-right space-y-1">
-            <span class="font-mono text-stone-400 text-[11px]">&copy; 2026 ArchaeoMap. All rights reserved.</span>
-            <p class="text-[10px] text-stone-400">Designed for academic research, digital humanities, and archaeological field surveys.</p>
+            <span class="font-mono text-stone-400 text-[11px]">&copy; 2026 ARCHAEO-BHĀRAT. All rights reserved.</span>
+            <p class="text-[10px] text-stone-400">Collaborative Agentic AI, DBSCAN Spatial Geostatistics & Wheeler-Kenyon Stratigraphy.</p>
           </div>
         </div>
       </footer>
@@ -1513,9 +1877,8 @@
        MODAL: ARTIFACT DETAIL VIEW (FULL SPECIMEN RECORD)
        ================================================================ -->
   <div id="artifact-detail-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto hidden">
-    <div class="bg-charcoal-850 border border-stone-700/80 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
+    <div class="bg-charcoal-850 border border-stone-700/80 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative ornate-corner">
       
-      <!-- Close Button -->
       <button onclick="app.closeDetailModal()" class="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-charcoal-800/80 hover:bg-stone-700 text-stone-300 hover:text-white flex items-center justify-center transition-colors">
         <i class="fas fa-times"></i>
       </button>
@@ -1534,8 +1897,8 @@
           </div>
         </div>
 
-        <!-- Right: Metadata & Taxonomic Details -->
-        <div class="p-6 md:p-8 space-y-6">
+        <!-- Right: Metadata & Interactive Archaeological Tools -->
+        <div class="p-6 md:p-8 space-y-5">
           <div>
             <h3 id="detail-modal-name" class="font-serif text-2xl font-bold text-sandstone-100"></h3>
             <p class="text-xs text-stone-400 mt-1">Archaeological Field Record</p>
@@ -1585,14 +1948,30 @@
           <!-- Spatial Context Mini-Map -->
           <div class="space-y-1.5">
             <h4 class="font-serif text-xs font-bold text-gold uppercase tracking-wider">Spatial Context (Survey Sector)</h4>
-            <div id="detail-mini-map" class="h-44 w-full rounded-xl overflow-hidden border border-stone-700 shadow-inner"></div>
+            <div id="detail-mini-map" class="h-40 w-full rounded-xl overflow-hidden border border-stone-700 shadow-inner"></div>
+          </div>
+
+          <!-- Historical Interactive Tools: RTI, Wax Seal Certificate & Archaeo-Agent AI -->
+          <div class="pt-1 flex flex-wrap gap-2">
+            <button onclick="app.consultAIForArtifact(app.selectedArtifactId)" class="w-full py-2 px-3 rounded-xl btn-ai-glow text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-md">
+              <i class="fas fa-brain-circuit text-amber-200"></i>
+              <span>Consult Archaeo-Agent Multi-Agent Team</span>
+            </button>
+            <button onclick="app.openRakingLightModal(app.selectedArtifactId)" class="flex-1 py-2 px-3 rounded-xl bg-charcoal-800 hover:bg-stone-700 text-gold border border-gold/40 text-xs font-medium transition-colors flex items-center justify-center gap-1.5 shadow">
+              <i class="fas fa-lightbulb"></i>
+              <span>Raking Light (RTI)</span>
+            </button>
+            <button onclick="app.openCertificateModal(app.selectedArtifactId)" class="flex-1 py-2 px-3 rounded-xl bg-charcoal-800 hover:bg-stone-700 text-amber-300 border border-amber-600/40 text-xs font-medium transition-colors flex items-center justify-center gap-1.5 shadow">
+              <i class="fas fa-stamp"></i>
+              <span>ASI Accession Certificate</span>
+            </button>
           </div>
 
           <!-- Actions -->
           <div class="pt-2 flex items-center gap-3">
             <button onclick="dataExport.exportJSON([db.getById(app.selectedArtifactId)], `${app.selectedArtifactId}.json`)" class="flex-1 py-2 px-3 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-stone-300 hover:text-white border border-stone-700 text-xs font-medium transition-colors flex items-center justify-center gap-1.5">
               <i class="fas fa-file-export"></i>
-              <span>Export Record (JSON)</span>
+              <span>Export Record</span>
             </button>
             <button onclick="app.closeDetailModal(); app.locateOnGIS(app.selectedArtifactId);" class="flex-1 py-2 px-3 rounded-xl bg-terracotta hover:bg-terracotta-hover text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-lg">
               <i class="fas fa-map-location-dot"></i>
@@ -1603,6 +1982,119 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ================================================================
+       MODAL 2: RAKING LIGHT (RTI) SURFACE INSPECTOR
+       ================================================================ -->
+  <div id="raking-light-modal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto hidden">
+    <div class="bg-charcoal-850 border border-stone-700 rounded-3xl max-w-2xl w-full p-6 space-y-5 shadow-2xl relative ornate-corner">
+      <button onclick="app.closeRakingLightModal()" class="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-charcoal-800 text-stone-300 hover:text-white flex items-center justify-center">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div>
+        <div class="inline-flex items-center gap-1.5 text-xs text-gold font-mono uppercase font-semibold">
+          <i class="fas fa-flashlight"></i> Reflectance Transformation Imaging (RTI) Simulation
+        </div>
+        <h3 class="font-serif text-xl font-bold text-sandstone-100" id="raking-light-name">Surface Carving & Relief Inspection</h3>
+        <p class="text-xs text-stone-400 mt-0.5">Drag the slider to shift directional torchlight angle and reveal faint inscriptions and chiseled toolmarks.</p>
+      </div>
+
+      <!-- Interactive Specimen Canvas with Directional Shadow -->
+      <div class="h-80 w-full rounded-2xl overflow-hidden bg-black flex items-center justify-center relative p-4 border border-stone-800">
+        <img id="raking-light-img" src="" alt="Specimen Inspection" class="max-h-full max-w-full object-contain raking-light-preview" />
+        <div class="absolute bottom-3 left-3 bg-charcoal-900/80 px-2.5 py-1 rounded text-[10px] font-mono text-gold border border-stone-700">
+          Light Direction: <span id="raking-light-angle-val">45°</span>
+        </div>
+      </div>
+
+      <!-- Light Direction Slider -->
+      <div class="space-y-1.5 bg-charcoal-800 p-4 rounded-xl border border-stone-800">
+        <div class="flex items-center justify-between text-xs">
+          <label for="raking-light-slider" class="text-stone-300 font-medium flex items-center gap-2">
+            <i class="fas fa-sun text-gold"></i>
+            <span>Incident Light Angle (0° to 360°)</span>
+          </label>
+        </div>
+        <input type="range" id="raking-light-slider" min="0" max="360" value="45" oninput="app.updateRakingLightAngle(this.value)"
+               class="w-full h-2 bg-charcoal-900 rounded-lg appearance-none cursor-pointer accent-gold" />
+        <div class="flex justify-between text-[9px] text-stone-400 font-mono pt-1">
+          <span>0° (East Raking)</span>
+          <span>90° (South Raking)</span>
+          <span>180° (West Raking)</span>
+          <span>270° (North Raking)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================
+       MODAL 3: OFFICIAL FIELD DISCOVERY CERTIFICATE WITH WAX SEAL
+       ================================================================ -->
+  <div id="certificate-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto hidden">
+    <div class="max-w-2xl w-full relative">
+      <button onclick="app.closeCertificateModal()" class="absolute -top-3 -right-3 z-30 w-8 h-8 rounded-full bg-charcoal-800 text-stone-300 hover:text-white flex items-center justify-center border border-stone-700">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <!-- Vintage Parchment Document Container -->
+      <div class="bg-[#F4ECE1] text-[#2D2115] p-8 md:p-10 rounded-2xl shadow-2xl border-4 border-[#8C6D46] space-y-6 font-serif relative overflow-hidden print:m-0 print:border-none">
+        
+        <!-- Ornamental Top Border Banner -->
+        <div class="text-center space-y-1 border-b-2 border-[#8C6D46]/40 pb-4">
+          <div class="flex items-center justify-center gap-2 text-[10px] tracking-[0.25em] uppercase text-[#755530] font-sans font-bold">
+            <span>🏛️ भारतीय पुरातत्त्व सर्वेक्षण &bull; ARCHAEOLOGICAL SURVEY OF INDIA</span>
+          </div>
+          <h2 class="text-2xl md:text-3xl font-serif font-black tracking-wide text-[#3D2914]">FIELD DISCOVERY ACCESSION CERTIFICATE</h2>
+          <p class="text-xs italic text-[#5C4226]">उत्खनन पुरावशेष पंजीयन एवं भू-स्थानिक प्रमाणीकरण पत्र &bull; “प्रत्नकीर्तिमपावृणु”</p>
+        </div>
+
+        <div class="grid grid-cols-3 gap-6 items-center">
+          <div class="col-span-2 space-y-2 text-xs font-sans">
+            <div><span class="font-serif font-bold text-[#3D2914]">Specimen Designation:</span> <span id="cert-artifact-name" class="font-bold text-[#8C3D1B]"></span></div>
+            <div><span class="font-serif font-bold text-[#3D2914]">Accession Record ID:</span> <span id="cert-artifact-id" class="font-mono"></span></div>
+            <div><span class="font-serif font-bold text-[#3D2914]">Excavation Sector:</span> <span id="cert-site"></span> &bull; <span id="cert-trench"></span></div>
+            <div><span class="font-serif font-bold text-[#3D2914]">Stratigraphic Depth:</span> <span id="cert-depth" class="font-mono"></span></div>
+            <div><span class="font-serif font-bold text-[#3D2914]">Geographic Coordinates:</span> <span id="cert-coords" class="font-mono text-[11px]"></span></div>
+            <div><span class="font-serif font-bold text-[#3D2914]">Material / Medium:</span> <span id="cert-material"></span></div>
+            <div><span class="font-serif font-bold text-[#3D2914]">Chronological Epoch:</span> <span id="cert-period"></span></div>
+          </div>
+
+          <div class="col-span-1 flex flex-col items-center">
+            <img id="cert-image" src="" alt="Specimen" class="w-24 h-24 rounded-lg object-cover border-2 border-[#8C6D46] shadow-md" />
+            <span class="text-[9px] text-[#755530] font-mono mt-1">Field Photo Archive</span>
+          </div>
+        </div>
+
+        <!-- Seal & Signatures -->
+        <div class="pt-6 border-t border-[#8C6D46]/40 flex items-center justify-between">
+          <div class="space-y-1">
+            <div class="text-xs font-serif font-bold text-[#3D2914]">Verified & Georeferenced by:</div>
+            <div id="cert-registrar" class="text-xs italic text-[#5C4226]">Dr. A. Sen (Senior Field Archaeologist, ASI)</div>
+            <div class="text-[10px] font-mono text-[#755530]">Date Recorded: <span id="cert-date"></span> &bull; <span class="text-emerald-700 font-bold">Archaeo-Agent AI Verified</span></div>
+          </div>
+
+          <!-- Realistic 3D Red Wax Seal Stamp with ASI Lion Capital -->
+          <div class="flex items-center gap-3">
+            <div class="wax-seal" title="ASI Official Seal">
+              <div class="flex flex-col items-center justify-center leading-none">
+                <span class="text-white text-lg font-serif-dec font-bold drop-shadow">🏛️</span>
+                <span class="text-[8px] font-mono font-bold text-white tracking-widest uppercase">ASI</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Print Action -->
+        <div class="pt-2 text-center print:hidden">
+          <button onclick="app.printCertificate()" class="px-5 py-2 rounded-xl bg-[#8C3D1B] hover:bg-[#6E2E14] text-white font-sans text-xs font-bold transition-colors shadow-md">
+            <i class="fas fa-print mr-1.5"></i> Print / Save Certificate
+          </button>
+        </div>
+
+      </div>
     </div>
   </div>
 
