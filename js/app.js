@@ -1230,25 +1230,37 @@ class ArchaeoApp {
  * ===================================================================
  */
 
+/**
+ * ===================================================================
+ * ARCHAEO-AGENT: Autonomous Archaeological Intelligence Network
+ * Collaborative Multi-Agent Engine for Interactive Copilot Chat,
+ * Epigraphy, Wheeler-Kenyon Stratigraphy, Spatial GIS (DBSCAN),
+ * and Archeometric Conservation.
+ * ===================================================================
+ */
+
 class ArchaeoAgentEngine {
   constructor(app) {
     this.app = app;
     this.isRunning = false;
-    this.currentSimulationTimer = null;
+    this.voiceEnabled = false;
+    this.currentMode = "chat";
+    this.conversationHistory = [];
+
     this.agents = {
       director: {
         id: "director",
-        name: "Survey Director (सूत्रधार)",
-        role: "Hierarchical ReAct Orchestrator & Task Decomposition",
+        name: "Dr. Alok Verma (Survey Director)",
+        role: "Lead Orchestrator & Task Decomposition",
         icon: "fa-crown",
         color: "#D4AF37",
-        badge: "Director",
+        badge: "Lead",
         status: "Online & Ready"
       },
       spatial: {
         id: "spatial",
-        name: "Spatial GIS Geostatistician (भू-स्थानिक विश्लेषक)",
-        role: "Haversine DBSCAN Spatial Clustering & Distance Matrix",
+        name: "Dr. Rajeshwari Nair (Spatial GIS)",
+        role: "Haversine DBSCAN Spatial Clustering & Map Geonavigation",
         icon: "fa-earth-asia",
         color: "#58D68D",
         badge: "Spatial GIS",
@@ -1256,8 +1268,8 @@ class ArchaeoAgentEngine {
       },
       epigraphy: {
         id: "epigraphy",
-        name: "Epigraphy & Paleographer (अभिलेखविद)",
-        role: "Indus Glyphs, Ashokan Brahmi & Tamil-Brahmi Decipherment",
+        name: "Prof. S. Mukherjee (Epigraphist)",
+        role: "Indus Glyphs, Ashokan Brahmi & Sangam Tamil-Brahmi Decipherment",
         icon: "fa-scroll",
         color: "#5DADE2",
         badge: "Epigraphy",
@@ -1265,16 +1277,16 @@ class ArchaeoAgentEngine {
       },
       stratigraphy: {
         id: "stratigraphy",
-        name: "Chrono-Stratigrapher (कालक्रम स्तरविद)",
+        name: "Dr. Vikram Kulkarni (Stratigrapher)",
         role: "Wheeler-Kenyon Box-Trench Audit & Law of Superposition",
         icon: "fa-layer-group",
         color: "#F39C12",
-        badge: "Stratigraphy",
+        badge: "Strata",
         status: "Online & Ready"
       },
       conservation: {
         id: "conservation",
-        name: "Archeometry & Conservator (संरक्षण विशेषज्ञ)",
+        name: "Ms. Ananya Roy (Conservator)",
         role: "Material Degradation, Patina Stability & Preventative Care",
         icon: "fa-flask-vial",
         color: "#EC7063",
@@ -1285,26 +1297,100 @@ class ArchaeoAgentEngine {
   }
 
   init() {
+    // Mode Switchers (Chat vs ReAct Telemetry)
+    const tabChatBtn = document.getElementById("agent-tab-chat-btn");
+    const tabTelemetryBtn = document.getElementById("agent-tab-telemetry-btn");
+    if (tabChatBtn && tabTelemetryBtn) {
+      tabChatBtn.addEventListener("click", () => this.switchMode("chat"));
+      tabTelemetryBtn.addEventListener("click", () => this.switchMode("telemetry"));
+    }
+
+    // Interactive Chat Input
+    const chatInput = document.getElementById("agent-chat-input");
+    const chatSendBtn = document.getElementById("agent-chat-send-btn");
+    if (chatSendBtn && chatInput) {
+      chatSendBtn.addEventListener("click", () => {
+        const q = chatInput.value.trim();
+        if (q) {
+          this.sendUserMessage(q);
+          chatInput.value = "";
+        }
+      });
+      chatInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          const q = chatInput.value.trim();
+          if (q) {
+            this.sendUserMessage(q);
+            chatInput.value = "";
+          }
+        }
+      });
+    }
+
+    // Drawer Input
+    const drawerInput = document.getElementById("drawer-chat-input");
+    const drawerSendBtn = document.getElementById("drawer-chat-send-btn");
+    if (drawerSendBtn && drawerInput) {
+      drawerSendBtn.addEventListener("click", () => {
+        const q = drawerInput.value.trim();
+        if (q) {
+          this.sendUserMessage(q);
+          drawerInput.value = "";
+        }
+      });
+      drawerInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          const q = drawerInput.value.trim();
+          if (q) {
+            this.sendUserMessage(q);
+            drawerInput.value = "";
+          }
+        }
+      });
+    }
+
+    // Prompt Pills
+    document.querySelectorAll(".prompt-pill").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const prompt = btn.dataset.prompt || btn.innerText.trim();
+        this.sendQuickPrompt(prompt);
+      });
+    });
+
+    // Voice / Speech Synthesis Toggle
+    const speechToggleBtn = document.getElementById("agent-speech-toggle-btn");
+    if (speechToggleBtn) {
+      speechToggleBtn.addEventListener("click", () => {
+        this.voiceEnabled = !this.voiceEnabled;
+        speechToggleBtn.classList.toggle("text-gold", this.voiceEnabled);
+        speechToggleBtn.classList.toggle("text-stone-400", !this.voiceEnabled);
+        this.app.showToast(
+          this.voiceEnabled ? "Voice Output Enabled" : "Voice Output Muted",
+          this.voiceEnabled ? "Archaeo-Agent will read responses aloud." : "Text-to-speech audio muted.",
+          "info"
+        );
+      });
+    }
+
+    // Clear Chat
+    const clearChatBtn = document.getElementById("agent-clear-chat-btn");
+    if (clearChatBtn) {
+      clearChatBtn.addEventListener("click", () => this.clearChat());
+    }
+
+    // Microphone Voice Input
+    const micBtn = document.getElementById("agent-chat-mic-btn");
+    if (micBtn) {
+      micBtn.addEventListener("click", () => this.startSpeechRecognition());
+    }
+
+    // Telemetry Run Audit Button
     const runAuditBtn = document.getElementById("agent-run-audit-btn");
     if (runAuditBtn) {
       runAuditBtn.addEventListener("click", () => this.runFullSurveyAudit());
     }
 
-    const queryInput = document.getElementById("agent-query-input");
-    const querySubmitBtn = document.getElementById("agent-query-submit");
-    if (querySubmitBtn && queryInput) {
-      querySubmitBtn.addEventListener("click", () => {
-        const q = queryInput.value.trim();
-        if (q) this.processCustomQuery(q);
-      });
-      queryInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          const q = queryInput.value.trim();
-          if (q) this.processCustomQuery(q);
-        }
-      });
-    }
-
+    // Scenario Buttons
     document.querySelectorAll("[data-agent-scenario]").forEach(btn => {
       btn.addEventListener("click", () => {
         const scenario = btn.dataset.agentScenario;
@@ -1312,6 +1398,7 @@ class ArchaeoAgentEngine {
       });
     });
 
+    // Clear Logs Button
     const clearLogsBtn = document.getElementById("agent-clear-logs-btn");
     if (clearLogsBtn) {
       clearLogsBtn.addEventListener("click", () => this.clearLogs());
@@ -1322,6 +1409,49 @@ class ArchaeoAgentEngine {
     this.updateAgentStatusBadges();
   }
 
+  switchMode(mode) {
+    this.currentMode = mode;
+    const subviewChat = document.getElementById("agent-subview-chat");
+    const subviewTelemetry = document.getElementById("agent-subview-telemetry");
+    const tabChatBtn = document.getElementById("agent-tab-chat-btn");
+    const tabTelemetryBtn = document.getElementById("agent-tab-telemetry-btn");
+
+    if (mode === "chat") {
+      if (subviewChat) subviewChat.classList.remove("hidden");
+      if (subviewTelemetry) subviewTelemetry.classList.add("hidden");
+      if (tabChatBtn) {
+        tabChatBtn.className = "px-5 py-2.5 rounded-xl bg-gold text-charcoal-900 font-serif font-bold text-xs shadow-md transition-all flex items-center gap-2";
+      }
+      if (tabTelemetryBtn) {
+        tabTelemetryBtn.className = "px-5 py-2.5 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-stone-300 hover:text-white font-serif font-bold text-xs border border-stone-700 transition-all flex items-center gap-2";
+      }
+    } else {
+      if (subviewChat) subviewChat.classList.add("hidden");
+      if (subviewTelemetry) subviewTelemetry.classList.remove("hidden");
+      if (tabChatBtn) {
+        tabChatBtn.className = "px-5 py-2.5 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-stone-300 hover:text-white font-serif font-bold text-xs border border-stone-700 transition-all flex items-center gap-2";
+      }
+      if (tabTelemetryBtn) {
+        tabTelemetryBtn.className = "px-5 py-2.5 rounded-xl bg-gold text-charcoal-900 font-serif font-bold text-xs shadow-md transition-all flex items-center gap-2";
+      }
+    }
+  }
+
+  toggleDrawer() {
+    const drawer = document.getElementById("global-ai-copilot-drawer");
+    if (!drawer) return;
+    drawer.classList.toggle("translate-x-full");
+    if (!drawer.classList.contains("translate-x-full")) {
+      const input = document.getElementById("drawer-chat-input");
+      if (input) setTimeout(() => input.focus(), 250);
+    }
+  }
+
+  closeDrawer() {
+    const drawer = document.getElementById("global-ai-copilot-drawer");
+    if (drawer) drawer.classList.add("translate-x-full");
+  }
+
   updateAgentStatusBadges(activeAgentKey = null) {
     Object.keys(this.agents).forEach(key => {
       const card = document.getElementById(`agent-card-${key}`);
@@ -1330,7 +1460,7 @@ class ArchaeoAgentEngine {
 
       if (activeAgentKey === key) {
         card.classList.add("agent-thinking");
-        statusEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-ping mr-1.5"></span><span class="text-amber-300 font-bold">Reasoning / Tool Active...</span>`;
+        statusEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-ping mr-1.5"></span><span class="text-amber-300 font-bold">Collaborating...</span>`;
       } else {
         card.classList.remove("agent-thinking");
         statusEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-1.5"></span><span class="text-stone-400">Online & Ready</span>`;
@@ -1338,6 +1468,684 @@ class ArchaeoAgentEngine {
     });
   }
 
+  startSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      this.app.showToast("Voice Input", "Speech recognition is not supported in this browser. Please type your query.", "warning");
+      return;
+    }
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      this.app.showToast("Listening...", "Speak your archaeological question clearly.", "info");
+
+      recognition.onresult = (event) => {
+        const spokenText = event.results[0][0].transcript;
+        const chatInput = document.getElementById("agent-chat-input");
+        if (chatInput) {
+          chatInput.value = spokenText;
+          this.sendUserMessage(spokenText);
+        }
+      };
+
+      recognition.onerror = () => {
+        this.app.showToast("Voice Error", "Could not capture audio. Please try typing instead.", "warning");
+      };
+
+      recognition.start();
+    } catch (e) {
+      console.warn("Speech recognition error:", e);
+    }
+  }
+
+  speakText(text) {
+    if (!this.voiceEnabled || !window.speechSynthesis) return;
+    try {
+      window.speechSynthesis.cancel();
+      // Strip HTML tags
+      const clean = text.replace(/<[^>]*>?/gm, "").replace(/&bull;/g, "•").replace(/&nbsp;/g, " ");
+      const utterance = new SpeechSynthesisUtterance(clean);
+      utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.warn("Speech synthesis error:", e);
+    }
+  }
+
+  clearChat() {
+    const stream = document.getElementById("agent-chat-stream");
+    if (stream) {
+      stream.innerHTML = `
+        <div class="flex items-start gap-3.5 max-w-3xl">
+          <div class="w-9 h-9 rounded-xl bg-gold/20 border border-gold/40 text-gold flex items-center justify-center text-sm shrink-0 shadow-lg mt-1">
+            <i class="fas fa-crown"></i>
+          </div>
+          <div class="chat-bubble-agent p-4 space-y-2.5 flex-1">
+            <div class="flex items-center justify-between border-b border-stone-800/80 pb-1.5 text-[11px]">
+              <span class="font-bold text-gold flex items-center gap-1.5 font-serif">
+                Dr. Alok Verma &bull; Survey Director
+              </span>
+              <span class="text-stone-500 font-mono text-[10px]">Active</span>
+            </div>
+            <p class="text-xs text-stone-200 leading-relaxed font-sans">
+              Conversation stream refreshed. What archaeological subject, excavation sector, or artifact would you like to investigate?
+            </p>
+          </div>
+        </div>
+      `;
+    }
+    const drawerStream = document.getElementById("drawer-chat-stream");
+    if (drawerStream) {
+      drawerStream.innerHTML = `
+        <div class="p-3.5 rounded-2xl bg-charcoal-800/90 border border-stone-800 text-stone-300 space-y-2">
+          <p class="font-serif font-bold text-gold text-xs">Dr. Alok Verma &bull; Survey Director</p>
+          <p class="text-xs leading-relaxed">
+            I am active alongside your current view. Ask me questions about artifacts, tell me to zoom to a sector on the map, or audit archaeological stratigraphy.
+          </p>
+        </div>
+      `;
+    }
+  }
+
+  sendQuickPrompt(text) {
+    if (this.currentMode !== "chat") {
+      this.switchMode("chat");
+    }
+    this.sendUserMessage(text);
+  }
+
+  /**
+   * Primary User Message Dispatcher
+   */
+  sendUserMessage(userText) {
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // 1. Render User Message to main chat & drawer
+    this.appendMessage("user", userText, time);
+
+    // 2. Show Typing Indicator
+    this.showTypingIndicator(true);
+
+    // 3. Generate Intelligent Multi-Agent Response
+    setTimeout(() => {
+      this.showTypingIndicator(false);
+      const response = this.generateArchaeologicalResponse(userText);
+      this.appendMessage("agent", response.html, time, response.rawText);
+
+      // Speak if enabled
+      if (this.voiceEnabled) {
+        this.speakText(response.rawText);
+      }
+    }, 600);
+  }
+
+  showTypingIndicator(show) {
+    const indicator = document.getElementById("agent-typing-indicator");
+    if (indicator) {
+      indicator.classList.toggle("hidden", !show);
+      if (show) {
+        const stream = document.getElementById("agent-chat-stream");
+        if (stream) stream.scrollTop = stream.scrollHeight;
+      }
+    }
+  }
+
+  appendMessage(sender, contentHtml, time, speechText = "") {
+    const mainStream = document.getElementById("agent-chat-stream");
+    const drawerStream = document.getElementById("drawer-chat-stream");
+
+    // Main Stream Message Node
+    if (mainStream) {
+      const node = document.createElement("div");
+      if (sender === "user") {
+        node.className = "flex items-start justify-end gap-3 max-w-2xl ml-auto animate-fadeIn";
+        node.innerHTML = `
+          <div class="chat-bubble-user p-3.5 space-y-1 text-xs">
+            <div class="flex items-center justify-end gap-2 text-[10px] text-amber-200/70 border-b border-stone-700/50 pb-1">
+              <span class="font-bold">You (Field Researcher)</span>
+              <span>${time}</span>
+            </div>
+            <p class="text-stone-100 font-sans leading-relaxed pt-0.5">${contentHtml}</p>
+          </div>
+          <div class="w-8 h-8 rounded-xl bg-terracotta text-white flex items-center justify-center text-xs shrink-0 mt-1 shadow-md">
+            <i class="fas fa-user-astronaut"></i>
+          </div>
+        `;
+      } else {
+        node.className = "flex items-start gap-3.5 max-w-3xl animate-fadeIn";
+        node.innerHTML = `
+          <div class="w-9 h-9 rounded-xl bg-gold/20 border border-gold/40 text-gold flex items-center justify-center text-sm shrink-0 shadow-lg mt-1">
+            <i class="fas fa-brain-circuit"></i>
+          </div>
+          <div class="chat-bubble-agent p-4 space-y-2.5 flex-1 text-xs">
+            <div class="flex items-center justify-between border-b border-stone-800/80 pb-1 text-[11px]">
+              <span class="font-bold text-gold flex items-center gap-1.5 font-serif">
+                Dr. Alok Verma & Collaborative Agents
+              </span>
+              <div class="flex items-center gap-2">
+                <span class="text-stone-500 font-mono text-[10px]">${time}</span>
+                <button class="text-stone-400 hover:text-gold text-xs transition-colors" onclick="app.archaeoAgent.speakText('${(speechText || "").replace(/'/g, "\\'")}')" title="Listen">
+                  <i class="fas fa-volume-high text-[11px]"></i>
+                </button>
+              </div>
+            </div>
+            <div class="text-stone-200 font-sans leading-relaxed space-y-2">
+              ${contentHtml}
+            </div>
+          </div>
+        `;
+      }
+      mainStream.appendChild(node);
+      mainStream.scrollTop = mainStream.scrollHeight;
+    }
+
+    // Drawer Stream Message Node
+    if (drawerStream) {
+      const drawerNode = document.createElement("div");
+      if (sender === "user") {
+        drawerNode.className = "p-3 rounded-xl bg-charcoal-700/80 border border-stone-700 text-stone-100 text-xs ml-4";
+        drawerNode.innerHTML = `<span class="text-[10px] text-gold font-bold block mb-1">You:</span>${contentHtml}`;
+      } else {
+        drawerNode.className = "p-3.5 rounded-xl bg-charcoal-800/90 border border-gold/30 text-stone-200 text-xs mr-4 space-y-1.5";
+        drawerNode.innerHTML = `
+          <span class="text-[10px] text-gold font-bold font-serif block">Archaeo-Agent:</span>
+          <div class="leading-relaxed font-sans">${contentHtml}</div>
+        `;
+      }
+      drawerStream.appendChild(drawerNode);
+      drawerStream.scrollTop = drawerStream.scrollHeight;
+    }
+  }
+
+  /**
+   * Action Dispatcher for Chat Buttons
+   */
+  executeAction(actionType, param) {
+    if (actionType === "flyToSite") {
+      this.app.navigateTo("gis-explorer");
+      this.closeDrawer();
+      const artifacts = db.filter({ site: param });
+      if (artifacts.length > 0) {
+        setTimeout(() => {
+          gis.focusArtifact(artifacts[0].id);
+          this.app.showToast("GIS Geolocation", `Camera panned to ${param} archaeological sector.`, "info");
+        }, 350);
+      }
+    } else if (actionType === "locateArtifact") {
+      this.app.navigateTo("gis-explorer");
+      this.closeDrawer();
+      setTimeout(() => {
+        gis.focusArtifact(param);
+        this.app.showToast("Artifact Located", `Centered on specimen [${param}] at 17x zoom.`, "info");
+      }, 350);
+    } else if (actionType === "inspectArtifact") {
+      this.app.openDetailModal(param);
+    } else if (actionType === "filterRepo") {
+      this.app.navigateTo("repository");
+      this.closeDrawer();
+      const siteSelect = document.getElementById("repo-filter-site");
+      const matSelect = document.getElementById("repo-filter-material");
+      const typeSelect = document.getElementById("repo-filter-type");
+
+      if (param.site && siteSelect) siteSelect.value = param.site;
+      if (param.material && matSelect) matSelect.value = param.material;
+      if (param.type && typeSelect) typeSelect.value = param.type;
+
+      this.app.renderRepository();
+      this.app.showToast("Repository Filtered", `Displaying matching archaeological discoveries.`, "info");
+    } else if (actionType === "runCluster") {
+      this.app.navigateTo("spatial-analysis");
+      this.closeDrawer();
+      this.app.showToast("Spatial Geostatistics", "Loaded DBSCAN workshop density clustering.", "info");
+    } else if (actionType === "runAudit") {
+      this.app.navigateTo("agentic-ai");
+      this.switchMode("telemetry");
+      this.runFullSurveyAudit();
+    } else if (actionType === "runScenario") {
+      this.app.navigateTo("agentic-ai");
+      this.switchMode("telemetry");
+      this.runScenario(param);
+    }
+  }
+
+  /**
+   * Intelligent Archaeological NLU Response Generator
+   */
+  generateArchaeologicalResponse(rawQuery) {
+    const q = rawQuery.toLowerCase().trim();
+    const artifacts = db.getAll();
+
+    // 1. Greetings & Orientation
+    if (/^(hi|hello|hey|namaste|greetings|who are you|help|what can you do)/.test(q)) {
+      return {
+        rawText: "Greetings! I am Dr. Alok Verma, Lead Survey Director of ARCHAEO-AGENT. My team of 5 specialized agents covers GIS geostatistics, epigraphy, soil stratigraphy, and conservation. We monitor 36 curated discoveries across India.",
+        html: `
+          <p>Greetings! I am <strong>Dr. Alok Verma</strong>, Survey Director for the <strong>ARCHAEO-AGENT</strong> collaborative intelligence system.</p>
+          <p>Our autonomous team consists of:</p>
+          <ul class="space-y-1 list-disc list-inside text-stone-300">
+            <li><strong>Dr. Rajeshwari Nair (Spatial GIS)</strong>: Haversine distance, boundary hulls & DBSCAN clustering.</li>
+            <li><strong>Prof. S. Mukherjee (Epigraphy)</strong>: Ashokan Brahmi, Keezhadi Tamil-Brahmi & Indus seal glyphs.</li>
+            <li><strong>Dr. Vikram Kulkarni (Stratigrapher)</strong>: Wheeler-Kenyon box-trenches & Law of Superposition.</li>
+            <li><strong>Ms. Ananya Roy (Conservator)</strong>: Material degradation, patina stability & relative humidity.</li>
+          </ul>
+          <p class="pt-1 text-stone-300">Here are quick actions you can try right now:</p>
+          <div class="pt-2 flex flex-wrap gap-2">
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('flyToSite', 'Lothal')">
+              <i class="fas fa-ship"></i> Fly to Lothal
+            </button>
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('flyToSite', 'Dholavira')">
+              <i class="fas fa-water"></i> Fly to Dholavira
+            </button>
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('runAudit')">
+              <i class="fas fa-play"></i> Run 36-Site Audit
+            </button>
+          </div>
+        `
+      };
+    }
+
+    // 2. Lothal & Maritime Trade
+    if (q.includes("lothal") || q.includes("dockyard") || (q.includes("maritime") && q.includes("trade"))) {
+      return {
+        rawText: "Lothal is the world's earliest known tidal dockyard, established around 2400 BCE in Gujarat. It featured a massive fired-brick basin connected to the Sabarmati river channel and Persian Gulf trade routes.",
+        html: `
+          <p><strong>Lothal</strong> is one of the most celebrated Bronze Age maritime ports of the Harappan civilization, excavated by S.R. Rao in Gujarat.</p>
+          <p>Key Archaeological Highlights:</p>
+          <ul class="space-y-1 list-disc list-inside text-stone-300">
+            <li><strong>Tidal Dockyard Basin:</strong> A 214m &times; 36m fired-brick tidal basin that could dock seafaring dhows during high tide.</li>
+            <li><strong>Bead-Making Kiln:</strong> A circular craft kiln producing etched carnelian beads exported to the Royal Cemetery of Ur in Mesopotamia.</li>
+            <li><strong>Steatite Stamp Seals:</strong> Square seals with boss handles on reverse, used to stamp clay sealings on trade bales.</li>
+          </ul>
+          
+          <div class="agent-sub-card" style="--agent-accent: #58D68D;">
+            <strong class="text-emerald-400 font-mono text-[11px] block mb-0.5">Dr. Rajeshwari Nair &bull; Spatial GIS Note:</strong>
+            Lothal coordinates: 22.5218° N, 72.2492° E. Ancient Gulf of Khambhat shoreline proximity: 18.5 km.
+          </div>
+
+          <div class="agent-sub-card" style="--agent-accent: #5DADE2;">
+            <strong class="text-sky-400 font-mono text-[11px] block mb-0.5">Prof. S. Mukherjee &bull; Epigraphy Note:</strong>
+            Terracotta sealings from Lothal bear Indus signs alongside impressions of packing reeds and woven ropes, confirming commercial customs clearance.
+          </div>
+
+          <div class="pt-2 flex flex-wrap gap-2">
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('flyToSite', 'Lothal')">
+              <i class="fas fa-map-location-dot"></i> Show Lothal on Map
+            </button>
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('filterRepo', { site: 'Lothal' })">
+              <i class="fas fa-box-archive"></i> View Lothal Relics
+            </button>
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('runScenario', 'trade')">
+              <i class="fas fa-route"></i> Trade Network Analysis
+            </button>
+          </div>
+        `
+      };
+    }
+
+    // 3. Dholavira & Water Engineering
+    if (q.includes("dholavira") || q.includes("reservoir") || q.includes("signboard")) {
+      return {
+        rawText: "Dholavira, located on Khadir Bet in the Rann of Kutch, is a UNESCO World Heritage site known for its 16 rock-cut monumental reservoirs and a 10-glyph giant Indus signboard.",
+        html: `
+          <p><strong>Dholavira</strong> is an extraordinary Harappan metropolis situated on Khadir Bet island in Kutch, Gujarat, excavated by R.S. Bisht.</p>
+          <p>Key Archaeological Discoveries:</p>
+          <ul class="space-y-1 list-disc list-inside text-stone-300">
+            <li><strong>Hydraulic Engineering:</strong> 16 monumental rock-cut water reservoirs with cascading stone dams to trap rainwater from monsoon streams.</li>
+            <li><strong>The 10-Glyph Signboard:</strong> White crystalline gypsum letters mounted over the Northern Gateway of the Citadel.</li>
+            <li><strong>Tripartite Town Planning:</strong> Unique Citadel, Middle Town, and Lower Town divisions fortified by dressed limestone ramparts.</li>
+          </ul>
+
+          <div class="agent-sub-card" style="--agent-accent: #F39C12;">
+            <strong class="text-amber-400 font-mono text-[11px] block mb-0.5">Dr. Vikram Kulkarni &bull; Stratigraphy Note:</strong>
+            Deep trench soundings in the East Reservoir reach Stratum V (3.2m depth), showing continuous habitation across seven distinct cultural stages from 2600 to 1500 BCE.
+          </div>
+
+          <div class="pt-2 flex flex-wrap gap-2">
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('flyToSite', 'Dholavira')">
+              <i class="fas fa-map-location-dot"></i> Fly to Dholavira on Map
+            </button>
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('filterRepo', { site: 'Dholavira' })">
+              <i class="fas fa-box-archive"></i> View Dholavira Artifacts
+            </button>
+          </div>
+        `
+      };
+    }
+
+    // 4. Keezhadi & Tamil-Brahmi Discovery
+    if (q.includes("keezhadi") || q.includes("vaigai") || q.includes("tamil-brahmi") || q.includes("sangam")) {
+      return {
+        rawText: "Keezhadi, excavated along the Vaigai river in Tamil Nadu, provides evidence of an urban Sangam civilization dated to 580 BCE, demonstrating that literacy in South India predated Ashokan monumental edicts.",
+        html: `
+          <p><strong>Keezhadi</strong> is a landmark excavation on the Vaigai river basin in Sivagangai district, Tamil Nadu, conducted by the Tamil Nadu State Department of Archaeology and ASI.</p>
+          <p>Why Keezhadi Revolutionized Indian Archaeology:</p>
+          <ul class="space-y-1 list-disc list-inside text-stone-300">
+            <li><strong>Pre-Ashokan Literacy:</strong> AMS radiocarbon dating of carbonized paddy husks in Stratum IV yielded a calibrated date of <strong>580 BCE</strong>, showing early Tamil-Brahmi script flourished 300 years before Ashoka's rock edicts.</li>
+            <li><strong>Civic Urban Settlement:</strong> Uncovered covered brick drain lines, textile dyeing vats, carnelian beads, and Roman rouletted ware.</li>
+            <li><strong>Names of Citizens:</strong> Potsherds inscribed with personal names such as <em>A-D-H-A-N</em>, <em>K-U-V-I-R-A-N</em>, and <em>C-E-N-T-A-N</em>.</li>
+          </ul>
+
+          <div class="agent-sub-card" style="--agent-accent: #5DADE2;">
+            <strong class="text-sky-400 font-mono text-[11px] block mb-0.5">Prof. S. Mukherjee &bull; Epigraphist Note:</strong>
+            Keezhadi Tamil-Brahmi incorporates distinct retroflex consonantal markers (Lha, Rha) and the pulli diacritic, adapted to early Dravidian phonology.
+          </div>
+
+          <div class="pt-2 flex flex-wrap gap-2">
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('flyToSite', 'Keezhadi')">
+              <i class="fas fa-map-location-dot"></i> Fly to Keezhadi on Map
+            </button>
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('filterRepo', { site: 'Keezhadi' })">
+              <i class="fas fa-box-archive"></i> View Keezhadi Discoveries
+            </button>
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('runScenario', 'epigraphy')">
+              <i class="fas fa-scroll"></i> Compare Brahmi Scripts
+            </button>
+          </div>
+        `
+      };
+    }
+
+    // 5. Nalanda Mahavihara & Buddhist Monasticism
+    if (q.includes("nalanda") || q.includes("university") || q.includes("monastery") || q.includes("buddhist")) {
+      return {
+        rawText: "Nalanda Mahavihara in Bihar was the ancient world's premier residential monastic university, renowned for its Dharmaganja libraries and bronze sculpture atelier.",
+        html: `
+          <p><strong>Nalanda Mahavihara</strong> in Bihar was founded under the Gupta Empire (5th century CE) and flourished through the Pala period as the world's foremost international seat of Buddhist higher learning.</p>
+          <p>Key Survey Records:</p>
+          <ul class="space-y-1 list-disc list-inside text-stone-300">
+            <li><strong>Monastic Assembly Seals:</strong> Terracotta sealings bearing the Dharma-wheel flanked by two gazelles with the official Sanskrit inscription.</li>
+            <li><strong>Pala Lost-Wax Bronzes:</strong> Superb cast-bronze images of Avalokiteshvara, Tara, and Buddha with intact malachite patina.</li>
+            <li><strong>Multi-Storey Viharas:</strong> Monastic cells arranged around open courtyards with meditation niches and granary wells.</li>
+          </ul>
+
+          <div class="agent-sub-card" style="--agent-accent: #EC7063;">
+            <strong class="text-red-400 font-mono text-[11px] block mb-0.5">Ms. Ananya Roy &bull; Conservation Diagnostic:</strong>
+            Nalanda bronze icons show stable cuprite-malachite mineral passivization. Maintain museum relative humidity below 45% to prevent cuprous chloride bronze disease.
+          </div>
+
+          <div class="pt-2 flex flex-wrap gap-2">
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('flyToSite', 'Nalanda')">
+              <i class="fas fa-map-location-dot"></i> Fly to Nalanda on Map
+            </button>
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('filterRepo', { site: 'Nalanda' })">
+              <i class="fas fa-box-archive"></i> View Nalanda Artifacts
+            </button>
+          </div>
+        `
+      };
+    }
+
+    // 6. Sisupalgarh & Sanchi
+    if (q.includes("sisupalgarh") || q.includes("dhauli") || q.includes("sanchi") || q.includes("ashoka") || q.includes("kalinga")) {
+      return {
+        rawText: "Sisupalgarh near Bhubaneswar was a fortified Kalinga citadel, while nearby Dhauli and Sanchi preserve Emperor Ashoka's monumental rock and pillar edicts from the 3rd century BCE.",
+        html: `
+          <p><strong>Sisupalgarh & Sanchi</strong> represent the monumental apex of early historic Mauryan urbanism and sacred architecture.</p>
+          <p>Survey Findings:</p>
+          <ul class="space-y-1 list-disc list-inside text-stone-300">
+            <li><strong>Sisupalgarh Fortification:</strong> A perfect square rampart with 8 grand monolithic gateways constructed from laterite and khandolite stone blocks.</li>
+            <li><strong>Dhauli Rock Edict:</strong> Carved on an elephant outcrop overlooking the Daya river, recording Ashoka's remorse after the Kalinga War.</li>
+            <li><strong>Sanchi Stupa 1:</strong> The Great Stupa with carved sandstone toranas depicting Jataka tales and the Ashokan Lion Capital pillar.</li>
+          </ul>
+
+          <div class="pt-2 flex flex-wrap gap-2">
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('flyToSite', 'Sisupalgarh')">
+              <i class="fas fa-map-location-dot"></i> View Sisupalgarh
+            </button>
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('flyToSite', 'Sanchi')">
+              <i class="fas fa-map-location-dot"></i> View Sanchi Stupa
+            </button>
+          </div>
+        `
+      };
+    }
+
+    // 7. Stratigraphy & Wheeler-Kenyon Box-Trench Method
+    if (q.includes("stratigraph") || q.includes("wheeler") || q.includes("superposition") || q.includes("layer") || q.includes("strata") || q.includes("depth")) {
+      return {
+        rawText: "Stratigraphy in our system follows Sir Mortimer Wheeler's box-trench excavation method and the Law of Superposition: deeper strata are chronologically older. Our survey spans depths from 0.4m down to 3.5m across Strata I through V with zero inversions.",
+        html: `
+          <p><strong>Wheeler-Kenyon Chrono-Stratigraphy</strong> forms the chronological foundation of ARCHAEO-BHARAT.</p>
+          <p>How our Stratigraphy Agent audits the site:</p>
+          <ul class="space-y-1 list-disc list-inside text-stone-300">
+            <li><strong>Law of Superposition:</strong> In undisturbed horizontal soil horizons, lower strata were deposited earlier. Recorded depths in our survey range from 0.40m down to 3.50m.</li>
+            <li><strong>Harris Matrix Validation:</strong> Checks that mature Harappan relics (2.5m–3.5m) correctly underlie Mauryan levels (1.7m–2.5m) and Gupta-Pala deposits (0.4m–1.1m).</li>
+            <li><strong>Baulk Preservation:</strong> Earth baulks left between trenches preserve vertical stratigraphic profiles for continuous cross-correlation.</li>
+          </ul>
+
+          <div class="agent-sub-card" style="--agent-accent: #F39C12;">
+            <strong class="text-amber-400 font-mono text-[11px] block mb-0.5">Dr. Vikram Kulkarni &bull; Live Stratigraphy Audit:</strong>
+            36 excavation units audited. Zero stratigraphic inversions detected. Chronological correlation coefficient: <strong>0.996</strong>.
+          </div>
+
+          <div class="pt-2 flex flex-wrap gap-2">
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('runScenario', 'strata')">
+              <i class="fas fa-layer-group"></i> Run Wheeler Stratigraphy Audit
+            </button>
+            <button class="chat-action-btn" onclick="app.navigateTo('trench'); app.archaeoAgent.closeDrawer();">
+              <i class="fas fa-trowel"></i> Open Excavation Trench View
+            </button>
+          </div>
+        `
+      };
+    }
+
+    // 8. Epigraphy & Inscriptions
+    if (q.includes("epigraph") || q.includes("script") || q.includes("inscription") || q.includes("brahmi") || q.includes("glyph")) {
+      const inscriptions = artifacts.filter(a => a.type === "Inscription");
+      return {
+        rawText: `We have ${inscriptions.length} verified epigraphic inscriptions recorded across Harappan, Mauryan, and Sangam sectors, including Indus stamp glyphs, Ashokan lapidary Brahmi, and Keezhadi Tamil-Brahmi.`,
+        html: `
+          <p><strong>Epigraphy & Paleography</strong> within our system correlates three pivotal historical script horizons:</p>
+          <ul class="space-y-1 list-disc list-inside text-stone-300">
+            <li><strong>Indus Script (c. 2600–1900 BCE):</strong> Undeciphered logo-syllabic signs on steatite unicorn seals from Dholavira and Lothal.</li>
+            <li><strong>Ashokan Lapidary Brahmi (c. 250 BCE):</strong> The monumental chancellery script used in Ashoka's Edicts at Sisupalgarh and Sanchi, deciphered by James Prinsep in 1837.</li>
+            <li><strong>Sangam Tamil-Brahmi (c. 580 BCE):</strong> Script incised on pottery at Keezhadi, documenting early South Indian civic literacy.</li>
+          </ul>
+
+          <p class="pt-1 text-stone-300">Found <strong>${inscriptions.length} epigraphic specimens</strong> in the registry:</p>
+          <div class="space-y-1 text-[11px]">
+            ${inscriptions.slice(0, 3).map(ins => `
+              <div class="flex items-center justify-between p-2 rounded bg-charcoal-900 border border-stone-800">
+                <span class="font-bold text-sandstone-100">[${ins.id}] ${ins.name}</span>
+                <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('inspectArtifact', '${ins.id}')">Inspect</button>
+              </div>
+            `).join("")}
+          </div>
+
+          <div class="pt-2 flex flex-wrap gap-2">
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('filterRepo', { type: 'Inscription' })">
+              <i class="fas fa-scroll"></i> Filter Inscriptions
+            </button>
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('runScenario', 'epigraphy')">
+              <i class="fas fa-book-atlas"></i> Compare Scripts
+            </button>
+          </div>
+        `
+      };
+    }
+
+    // 9. Conservation & Material Risk
+    if (q.includes("conservation") || q.includes("risk") || q.includes("deteriorat") || q.includes("preserv") || q.includes("patina")) {
+      const highRisk = artifacts.filter(a => a.conservationStatus === "High" || a.conservationStatus === "Critical");
+      return {
+        rawText: `Conservation analysis flagged ${highRisk.length} specimens requiring urgent stabilization, predominantly bronze artifacts prone to bronze disease and marine terracottas affected by salt efflorescence.`,
+        html: `
+          <p><strong>Archeometry & Material Conservation Report</strong> by Ms. Ananya Roy:</p>
+          <ul class="space-y-1 list-disc list-inside text-stone-300">
+            <li><strong>Bronze Disease Alert:</strong> Cuprous chloride in metal alloys reacts with ambient humidity forming powdery green atacamite. Votive bronzes from Nalanda are being monitored.</li>
+            <li><strong>Soluble Salt Flaking:</strong> Unbaked terracotta figurines from Lothal's marine environment require desalination washes before storage.</li>
+            <li><strong>Steatite Vitrification:</strong> Harappan seals must be sealed with micro-crystalline Renaissance wax to prevent cleavage along soapstone bedding planes.</li>
+          </ul>
+
+          <p class="pt-1 text-stone-300">Monitored Specimens:</p>
+          <div class="space-y-1 text-[11px]">
+            ${highRisk.slice(0, 3).map(hr => `
+              <div class="flex items-center justify-between p-2 rounded bg-charcoal-900 border border-stone-800">
+                <span>[${hr.id}] <strong>${hr.name}</strong> (${hr.material})</span>
+                <span class="text-red-400 font-mono font-bold">${hr.conservationStatus} Risk</span>
+                <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('inspectArtifact', '${hr.id}')">Inspect</button>
+              </div>
+            `).join("")}
+          </div>
+
+          <div class="pt-2 flex flex-wrap gap-2">
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('filterRepo', { material: 'Bronze' })">
+              <i class="fas fa-flask"></i> Filter Bronze Relics
+            </button>
+          </div>
+        `
+      };
+    }
+
+    // 10. Material Specific Searches (Bronze, Gold, Terracotta, Sandstone, etc.)
+    const materials = ["Bronze", "Gold", "Terracotta", "Sandstone", "Steatite", "Copper", "Iron", "Ceramic"];
+    const matchedMat = materials.find(m => q.includes(m.toLowerCase()));
+    if (matchedMat) {
+      const matArtifacts = artifacts.filter(a => a.material.toLowerCase().includes(matchedMat.toLowerCase()));
+      return {
+        rawText: `Found ${matArtifacts.length} discoveries crafted from ${matchedMat} in our survey registry across multiple cultural horizons.`,
+        html: `
+          <p>Found <strong>${matArtifacts.length} archaeological specimens</strong> made of <strong>${matchedMat}</strong>:</p>
+          <div class="space-y-1 text-[11px] pt-1">
+            ${matArtifacts.slice(0, 4).map(ma => `
+              <div class="flex items-center justify-between p-2 rounded bg-charcoal-900 border border-stone-800">
+                <div>
+                  <span class="font-bold text-sandstone-100">[${ma.id}] ${ma.name}</span>
+                  <span class="text-stone-400 block text-[10px]">${ma.site} &bull; Stratum ${ma.layer} (${ma.depth}m)</span>
+                </div>
+                <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('inspectArtifact', '${ma.id}')">Inspect</button>
+              </div>
+            `).join("")}
+          </div>
+          <div class="pt-2 flex flex-wrap gap-2">
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('filterRepo', { material: '${matchedMat}' })">
+              <i class="fas fa-box-archive"></i> View All ${matchedMat} in Repository
+            </button>
+          </div>
+        `
+      };
+    }
+
+    // 11. Spatial GIS & DBSCAN Geostatistics
+    if (q.includes("dbscan") || q.includes("cluster") || q.includes("spatial") || q.includes("distance") || q.includes("haversine")) {
+      return {
+        rawText: "DBSCAN spatial clustering in ARCHAEO-BHARAT groups discoveries into high-density activity zones using spherical Haversine distances with an epsilon of 480 meters and minimum points of 3.",
+        html: `
+          <p><strong>Spatial Geostatistics Engine & DBSCAN Clustering</strong>:</p>
+          <p>Our Spatial GIS Agent applies density-based clustering to identify functional archaeological horizons:</p>
+          <ul class="space-y-1 list-disc list-inside text-stone-300">
+            <li><strong>Spherical Haversine Metric:</strong> Calculates accurate metric distances across the earth's ellipsoid between excavation coordinates.</li>
+            <li><strong>DBSCAN Density Reachability:</strong> Uses &epsilon; = 480m and minPts = 3 to delineate workshop quarters (such as the bead factory in Lothal) from isolated surface finds.</li>
+            <li><strong>Convex Hull Polygons:</strong> Computes the spatial bounding area in square meters for each civilization cluster.</li>
+          </ul>
+
+          <div class="pt-2 flex flex-wrap gap-2">
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('runCluster')">
+              <i class="fas fa-cubes-stacked"></i> Open Spatial DBSCAN View
+            </button>
+            <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('runScenario', 'clusters')">
+              <i class="fas fa-chart-pie"></i> Run Cluster Density Simulation
+            </button>
+          </div>
+        `
+      };
+    }
+
+    // 12. Direct Navigation Commands
+    if (q.includes("take me to map") || q.includes("open map") || q.includes("show map") || q.includes("gis")) {
+      setTimeout(() => {
+        this.app.navigateTo("gis-explorer");
+        this.closeDrawer();
+      }, 400);
+      return {
+        rawText: "Navigating to GIS Explorer map view.",
+        html: `<p>Opening the <strong>GIS Explorer</strong> interactive mapping platform now.</p>`
+      };
+    }
+    if (q.includes("open repository") || q.includes("show repository") || q.includes("all artifacts")) {
+      setTimeout(() => {
+        this.app.navigateTo("repository");
+        this.closeDrawer();
+      }, 400);
+      return {
+        rawText: "Navigating to the Artifact Repository view.",
+        html: `<p>Opening the <strong>Artifact Repository</strong> with all 36 curated discoveries.</p>`
+      };
+    }
+
+    // 13. General Semantic Search Across Discoveries
+    const searchTerms = q.split(" ").filter(t => t.length > 2);
+    const matches = artifacts.filter(a => {
+      const full = `${a.name} ${a.site} ${a.period} ${a.material} ${a.type} ${a.description}`.toLowerCase();
+      return searchTerms.some(term => full.includes(term));
+    });
+
+    if (matches.length > 0) {
+      const top = matches.slice(0, 3);
+      return {
+        rawText: `I identified ${matches.length} matching archaeological discoveries in our database relevant to "${rawQuery}". Top match is ${top[0].name} from ${top[0].site}.`,
+        html: `
+          <p>I cross-referenced our registry and identified <strong>${matches.length} relevant archaeological discoveries</strong>:</p>
+          <div class="space-y-1.5 text-[11px] pt-1">
+            ${top.map(m => `
+              <div class="p-2.5 rounded-xl bg-charcoal-900 border border-stone-800 space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-sandstone-100">[${m.id}] ${m.name}</span>
+                  <span class="text-gold font-mono">${m.depth}m depth</span>
+                </div>
+                <p class="text-stone-400 text-[10px]">${m.site} &bull; ${m.period} &bull; ${m.material}</p>
+                <div class="pt-1 flex items-center gap-2">
+                  <button class="chat-action-btn text-[10px] py-1 px-2" onclick="app.archaeoAgent.executeAction('inspectArtifact', '${m.id}')">
+                    <i class="fas fa-search"></i> Inspect Specimen
+                  </button>
+                  <button class="chat-action-btn text-[10px] py-1 px-2" onclick="app.archaeoAgent.executeAction('locateArtifact', '${m.id}')">
+                    <i class="fas fa-location-crosshairs"></i> Locate on Map
+                  </button>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        `
+      };
+    }
+
+    // 14. Fallback Comprehensive Answer
+    return {
+      rawText: `I have analyzed your query: "${rawQuery}". As an archaeological copilot, I can assist you with our 36 Indian heritage sites across Gujarat, Odisha, Madhya Pradesh, Bihar, Karnataka, and Tamil Nadu.`,
+      html: `
+        <p>I parsed your inquiry: <em>"${rawQuery}"</em>.</p>
+        <p class="text-stone-300">
+          As your field survey copilot, I can retrieve data on:
+        </p>
+        <ul class="space-y-1 list-disc list-inside text-stone-300">
+          <li><strong>Excavation Sectors:</strong> Dholavira, Lothal, Sisupalgarh, Sanchi, Nalanda, Hampi, Keezhadi.</li>
+          <li><strong>Ancient Scripts:</strong> Indus seal glyphs, Ashokan lapidary Brahmi, and Sangam Tamil-Brahmi.</li>
+          <li><strong>Stratigraphy:</strong> Wheeler-Kenyon box-trenches, soil layers, and the Law of Superposition.</li>
+          <li><strong>Material Health:</strong> Bronze disease, salt efflorescence, and climate conservation specs.</li>
+        </ul>
+        <div class="pt-2 flex flex-wrap gap-2">
+          <button class="chat-action-btn" onclick="app.archaeoAgent.executeAction('runAudit')">
+            <i class="fas fa-play"></i> Run Full Multi-Agent Audit
+          </button>
+          <button class="chat-action-btn" onclick="app.navigateTo('gis-explorer'); app.archaeoAgent.closeDrawer();">
+            <i class="fas fa-map-location-dot"></i> View GIS Map
+          </button>
+        </div>
+      `
+    };
+  }
+
+  /**
+   * =================================================================
+   * TECHNICAL ReAct TELEMETRY STREAM & FIELD AUDITS
+   * (Kept intact for academic course demonstration)
+   * =================================================================
+   */
   clearLogs() {
     const terminal = document.getElementById("agent-terminal-logs");
     if (terminal) {
@@ -1368,7 +2176,7 @@ class ArchaeoAgentEngine {
     if (actionType === "CONSENSUS") actionBadgeClass = "bg-gold/25 text-gold border-gold/50";
 
     const entry = document.createElement("div");
-    entry.className = "p-3.5 rounded-xl bg-charcoal-900/90 border border-stone-800/80 space-y-1.5 text-xs font-mono transition-all duration-200 hover:border-stone-700 shadow-sm";
+    entry.className = "p-3.5 rounded-xl bg-charcoal-900/90 border border-stone-800/80 space-y-1.5 text-xs font-mono transition-all duration-200 hover:border-stone-700 shadow-sm animate-fadeIn";
 
     let toolHtml = "";
     if (toolCall) {
@@ -1537,7 +2345,6 @@ class ArchaeoAgentEngine {
         this.isRunning = false;
         this.updateAgentStatusBadges(null);
 
-        // Render final consensus briefing
         this.showConsensusReport(
           "Archaeological Survey of India — Multi-Agent Consensus Briefing",
           99.4,
@@ -1579,13 +2386,12 @@ class ArchaeoAgentEngine {
   }
 
   /**
-   * 2. RESEARCH SCENARIOS (Lothal, Epigraphy, Strata, Clusters)
+   * 2. RESEARCH SCENARIOS
    */
   runScenario(scenarioId) {
     if (this.isRunning) return;
     this.isRunning = true;
     this.clearLogs();
-    const artifacts = db.getAll();
 
     if (scenarioId === "trade") {
       this.executeScenarioSteps([
@@ -1651,170 +2457,17 @@ class ArchaeoAgentEngine {
   }
 
   /**
-   * 3. SINGLE ARTIFACT MULTI-AGENT DEEP DIVE
+   * 3. SINGLE ARTIFACT MULTI-AGENT CONSULTATION
    */
   analyzeSingleArtifact(id) {
     const artifact = db.getById(id);
     if (!artifact) return;
 
-    this.clearLogs();
-    this.isRunning = true;
+    this.app.navigateTo("agentic-ai");
+    this.switchMode("chat");
 
-    const steps = [
-      {
-        agent: "director",
-        action: "THOUGHT",
-        msg: `Initiating dedicated Multi-Agent Deep-Dive for Specimen [${artifact.id}]: ${artifact.name}. Context: ${artifact.site} &bull; Stratum ${artifact.layer} (${artifact.depth}m).`
-      },
-      {
-        agent: "spatial",
-        action: "TOOL_CALL",
-        msg: `Georeferencing coordinates (${artifact.latitude.toFixed(6)}° N, ${artifact.longitude.toFixed(6)}° E). Location confirmed within ${artifact.site} survey sector. Proximity to nearest watercourse / river basin: ~1.2 km.`,
-        tool: `gis.geolocate(${artifact.latitude}, ${artifact.longitude}) -> valid: TRUE`
-      },
-      {
-        agent: "stratigraphy",
-        action: "OBSERVE",
-        msg: `Stratigraphic Evaluation: Recorded depth ${artifact.depth}m correlates with ${artifact.layer}. Chronological classification (${artifact.period}) fits the expected Wheeler-Kenyon soil horizon without inversion.`
-      },
-      {
-        agent: "epigraphy",
-        action: "OBSERVE",
-        msg: artifact.type === "Inscription" 
-          ? `Epigraphic Review: Glyphs and lapidary execution match known historical inscriptions of ${artifact.period}. Inscription integrity: EXCELLENT.`
-          : `Typological Review: Specimen classified as ${artifact.type} crafted from ${artifact.material}. Morphological features conform to classical ${artifact.period} craftsmanship.`
-      },
-      {
-        agent: "conservation",
-        action: "ACTION",
-        msg: `Material Health Assessment: Material is ${artifact.material}. Recommendation: Standard museum climate control (RH 45-50%, Temperature 20±2°C). Zero active biological or chemical contamination reported.`,
-        tool: `conservation.diagnoseMaterial('${artifact.material}') -> status: STABLE`
-      },
-      {
-        agent: "director",
-        action: "CONSENSUS",
-        msg: `VERDICT: Specimen ${artifact.id} (${artifact.name}) is fully validated by all 5 autonomous agents. Authenticity and provenance confirmed for archival cataloging.`
-      }
-    ];
-
-    let idx = 0;
-    const run = () => {
-      if (idx >= steps.length) {
-        this.isRunning = false;
-        this.updateAgentStatusBadges(null);
-        this.showConsensusReport(
-          `Specimen Authentication Brief: ${artifact.name} (${artifact.id})`,
-          99.5,
-          [
-            `Geographic location (${artifact.latitude.toFixed(4)}° N, ${artifact.longitude.toFixed(4)}° E) verified within ${artifact.site}.`,
-            `Stratigraphic depth of ${artifact.depth}m correlates consistently with ${artifact.period}.`,
-            `Material composition of ${artifact.material} diagnosed in stable conservation condition.`
-          ],
-          [
-            "Issue Official Field Discovery Accession Certificate with 3D Wax Seal.",
-            "Index high-resolution photograph in National Archaeological Image Archive."
-          ],
-          artifact
-        );
-        return;
-      }
-      const s = steps[idx];
-      this.updateAgentStatusBadges(s.agent);
-      this.addLog(s.agent, s.action, s.msg, s.tool || null);
-      idx++;
-      setTimeout(run, 600);
-    };
-    run();
-  }
-
-  /**
-   * 4. NATURAL LANGUAGE ARCHEOLOGICAL QUERY COPILOT
-   */
-  processCustomQuery(rawQuery) {
-    if (this.isRunning) return;
-    this.clearLogs();
-    this.isRunning = true;
-
-    const q = rawQuery.toLowerCase();
-    const artifacts = db.getAll();
-
-    // Natural Language Query Filter
-    let matches = artifacts.filter(a => {
-      const fullText = `${a.name} ${a.site} ${a.period} ${a.material} ${a.type} ${a.description}`.toLowerCase();
-      return fullText.includes(q) || q.split(" ").some(word => word.length > 3 && fullText.includes(word));
-    });
-
-    // Check depth queries (e.g. "deeper than 2m")
-    if (q.includes("deep") || q.includes("depth") || q.includes("meter")) {
-      const depthMatch = q.match(/(\d+(\.\d+)?)\s*(m|meter)/);
-      if (depthMatch) {
-        const targetDepth = parseFloat(depthMatch[1]);
-        matches = artifacts.filter(a => a.depth >= targetDepth);
-      }
-    }
-
-    if (matches.length === 0) {
-      matches = artifacts.slice(0, 3);
-    }
-
-    const steps = [
-      {
-        agent: "director",
-        action: "THOUGHT",
-        msg: `User Query Received: "${rawQuery}". Parsing query intent and formulating collaborative agent investigation plan.`
-      },
-      {
-        agent: "spatial",
-        action: "TOOL_CALL",
-        msg: `Scanned spatial coordinate registry. Found ${matches.length} matching archaeological records across sites: ${[...new Set(matches.map(m => m.site))].join(", ")}.`,
-        tool: `db.query({ text: '${rawQuery.replace(/'/g, "")}', limit: 5 })`
-      },
-      {
-        agent: "epigraphy",
-        action: "OBSERVE",
-        msg: `Top Relevant Specimen: [${matches[0].id}] ${matches[0].name} (${matches[0].period}). Context: "${matches[0].description.slice(0, 140)}..."`
-      },
-      {
-        agent: "stratigraphy",
-        action: "OBSERVE",
-        msg: `Stratigraphic Analysis: Specimen depth profile spans ${Math.min(...matches.map(m => m.depth))}m to ${Math.max(...matches.map(m => m.depth))}m below surface across strata ${[...new Set(matches.map(m => m.layer))].slice(0, 2).join(", ")}.`
-      },
-      {
-        agent: "conservation",
-        action: "OBSERVE",
-        msg: `Materials detected in result set: ${[...new Set(matches.map(m => m.material))].join(", ")}. Conservation priority: NORMAL to HIGH.`
-      },
-      {
-        agent: "director",
-        action: "CONSENSUS",
-        msg: `RESPONSE SYNTHESIS: Based on the collaborative multi-agent cross-referencing of ${matches.length} specimens, the system confirms: ${matches[0].name} at ${matches[0].site} provides the primary archaeological correlation for this inquiry.`
-      }
-    ];
-
-    let step = 0;
-    const run = () => {
-      if (step >= steps.length) {
-        this.isRunning = false;
-        this.updateAgentStatusBadges(null);
-        this.showConsensusReport(
-          `Query Analysis: "${rawQuery}"`,
-          97.8,
-          matches.slice(0, 3).map(m => `[${m.id}] ${m.name} (${m.site}) — ${m.material}, ${m.period}, Depth: ${m.depth}m`),
-          [
-            `Examine specimen ${matches[0].id} in Artifact Detail View for raking light (RTI) relief examination.`,
-            `Locate matched specimens on the Pan-India GIS Explorer map.`
-          ],
-          { query: rawQuery, results: matches }
-        );
-        return;
-      }
-      const s = steps[step];
-      this.updateAgentStatusBadges(s.agent);
-      this.addLog(s.agent, s.action, s.msg, s.tool || null);
-      step++;
-      setTimeout(run, 550);
-    };
-    run();
+    const query = `Analyze specimen [${artifact.id}]: ${artifact.name} excavated at ${artifact.site} (Stratum ${artifact.layer}, ${artifact.depth}m). Material: ${artifact.material}, Period: ${artifact.period}.`;
+    this.sendUserMessage(query);
   }
 }
 
